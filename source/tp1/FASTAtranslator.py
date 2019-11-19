@@ -110,7 +110,102 @@ class Carboxyl(FunctionalGroup):
     def __init__(self):
         super().__init__(self,-1,False,False)
 
-class Phenyalanine(AminoAcid):
+class Alanine(AminoAcid):
+    def __init__(self):
+        super.__init__(self)
+        self.sidechain = "idk"
+
+class Arginine(AminoAcid):
+    def __init__(self):
+        super.__init__(self)
+        self.sidechain = "idk"
+
+class Asparagine(AminoAcid):
+    def __init__(self):
+        super.__init__(self)
+        self.sidechain = "idk"
+
+class AsparticAcid(AminoAcid):
+    def __init__(self):
+        super.__init__(self)
+        self.sidechain = "idk"
+
+class Cysteine(AminoAcid):
+    def __init__(self):
+        super.__init__(self)
+        self.sidechain = "idk"
+
+class Glutamine(AminoAcid):
+    def __init__(self):
+        super.__init__(self)
+        self.sidechain = "idk"
+
+class GlutamicAcid(AminoAcid):
+    def __init__(self):
+        super.__init__(self)
+        self.sidechain = "idk"
+
+class Glycine(AminoAcid):
+    def __init__(self):
+        super.__init__(self)
+        self.sidechain = "idk"
+
+class Histidine(AminoAcid):
+    def __init__(self):
+        super.__init__(self)
+        self.sidechain = "idk"
+
+class Isoleucine(AminoAcid):
+    def __init__(self):
+        super.__init__(self)
+        self.sidechain = "idk"
+
+class Leucine(AminoAcid):
+    def __init__(self):
+        super.__init__(self)
+        self.sidechain = "idk"
+
+class Lysine(AminoAcid):
+    def __init__(self):
+        super.__init__(self)
+        self.sidechain = "idk"
+
+class Methionine(AminoAcid):
+    def __init__(self):
+        super.__init__(self)
+        self.sidechain = "idk"
+
+class Phenylalanine(AminoAcid):
+    def __init__(self):
+        super.__init__(self)
+        self.sidechain = "idk"
+
+class Proline(AminoAcid):
+    def __init__(self):
+        super.__init__(self)
+        self.sidechain = "idk"
+
+class Serine(AminoAcid):
+    def __init__(self):
+        super.__init__(self)
+        self.sidechain = "idk"
+
+class Threonine(AminoAcid):
+    def __init__(self):
+        super.__init__(self)
+        self.sidechain = "idk"
+
+class Tryptophan(AminoAcid):
+    def __init__(self):
+        super.__init__(self)
+        self.sidechain = "idk"
+
+class Tyrosine(AminoAcid):
+    def __init__(self):
+        super.__init__(self)
+        self.sidechain = "idk"
+
+class Valine(AminoAcid):
     def __init__(self):
         super.__init__(self)
         self.sidechain = "idk"

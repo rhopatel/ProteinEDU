@@ -12,7 +12,8 @@ class AminoAcid(object):
         self.amine = Amine()
         self.carboxyl = Carboxyl()
         self.sidechain = sidechain
-  
+    def __repr__(self):
+        return self.__class__.__name__
 
 #FunctionalGroup superclass (will contain applicable method)
 class FunctionalGroup(object):
@@ -239,7 +240,7 @@ class FASTATranslator(object):
         return codonDict
 
     
-testTranslator = FASTATranslator("test.fasta")
+testTranslator = FASTATranslator("FADS.fasta")
 final = testTranslator.getSequence()
 module_manager.review()
 print(final) 

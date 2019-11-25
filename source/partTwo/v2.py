@@ -1,9 +1,14 @@
 #Project: ProteinEDU
 #Author: Rohan Patel
 
+
+#imports
 from multi_key_dict import multi_key_dict
 import module_manager
 import copy
+import pygame
+import sys
+import os
 
 #biological inheritance hierarchy:
 
@@ -14,6 +19,7 @@ class AminoAcid(object):
         self.amine = Amine()
         self.carboxyl = Carboxyl()
         self.sidechain = sidechain
+
     def __repr__(self):
         return self.__class__.__name__
     
@@ -278,6 +284,35 @@ def FASTAtest():
 def main():
     FASTAtest()
 
-if __name__ == "__main__":
+    pygame.init()
+    screen = pygame.display.set_mode((800,800))
+    screen.fill((255,255,255))
+    pygame.display.set_caption('first game')
+    done = False
+
+    screenSize,screenSize2 = pygame.display.get_surface().get_size()
+    loadBarHeight = screenSize*(0.10)
+    gameScreenWidth = screenSize*(0.80)
+    gameScreen = pygame.Rect(0,loadBarHeight,gameScreenWidth,screenSize)
+    loadBar = pygame.Rect(0,0,gameScreenWidth,loadBarHeight)
+    infoBar = pygame.Rect(gameScreenWidth,0,screenSize,screenSize)
+
+    while not done:
+        pygame.time.delay(100)
+        screen.fill((255,255,255))
+        pygame.draw.rect(screen,(0,0,0),gameScreen, 10)
+        pygame.draw.rect(screen,(0,0,0),loadBar,10)
+        pygame.draw.rect(screen,(0,0,0),infoBar,10)
+
+        for event in pygame.event.get():
+            if (event.type == pygame.QUIT):
+                done = True
+           
+            
+   
+        pygame.display.update()
+    pygame.quit()
+
+if __name__ == '__main__':
     main()
 

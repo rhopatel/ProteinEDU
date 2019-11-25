@@ -321,10 +321,12 @@ class FASTA(object):
         return str(self.getSequence())
 
 class Game(object):
-    def __init__(self):
+    def __init__(self,delay):
         self.gameFASTA = None
         self.gameSequence = None
         self.fileLoaded = False
+        self.delay = delay
+
         pygame.init()
         self.screen = pygame.display.set_mode((800,800))
         self.screen.fill((255,255,255))
@@ -420,13 +422,60 @@ class Game(object):
         self.helpText = self.gamefont.render("HELP INFORMATION",True,self.black)        
         self.screen.blit(self.helpText,self.gameScreen)
     
+    def checkLegal(self,aminoAcid):
+        return False
+    
+    def undoMove(self,aminoAcid):
+        iterations = 10
+        dx = (aminoAcid.particle.x - aminoAcid.x) / iterations
+        dy = (aminoAcid.particle.y - aminoAcid.y) / iterations
+
+        for i in range(iterations):
+            print(i)
+            pygame.draw.circle(self.screen,self.white,(int(aminoAcid.particle.x),int(aminoAcid.particle.y)),aminoAcid.r)
+            index = self.gameSequence.index(aminoAcid)
+            if (index!=0):
+                prevElement = self.gameSequence[index-1]
+                prevX = prevElement.x
+                prevY = prevElement.y
+                pygame.draw.line(self.screen,self.white,(prevX,prevY),
+                                                (aminoAcid.particle.x,
+                                                aminoAcid.particle.y),10)
+            if (index!=len(self.gameSequence)-1):
+                nextElement = self.gameSequence[index+1]
+                nextX = nextElement.x
+                nextY = nextElement.y
+                pygame.draw.line(self.screen,self.white,(nextX,nextY),
+                                                (aminoAcid.particle.x,
+                                                aminoAcid.particle.y),10)
+            aminoAcid.particle.x -= dx
+            aminoAcid.particle.y -= dy
+            self.drawSequence()
+
+            pygame.time.delay(100)
+    
+    def drawSequence(self):
+        if (self.fileLoaded):
+            prevX = None
+            prevY = None
+            for aminoAcid in self.getGameSequence():
+                if (prevX!=None):
+                    pygame.draw.line(self.screen,self.black,(prevX,prevY),
+                                            (aminoAcid.particle.x,
+                                            aminoAcid.particle.y),10)
+                prevX = aminoAcid.particle.x
+                prevY = aminoAcid.particle.y
+                aminoAcid.draw(self.screen)
+
+            pygame.display.update()
+    
 def main():
-    game = Game()
+    game = Game(10)
     #game.FASTAtest("assets//FADS.fasta")
     
   
     while not game.done:
-        pygame.time.delay(10)
+        pygame.time.delay(game.delay)
         game.screen.fill((255,255,255))
         pygame.draw.rect(game.screen,game.black,game.gameScreen, 10)
 
@@ -442,17 +491,8 @@ def main():
         pygame.draw.rect(game.screen,game.blue,game.helpButton)
         game.screen.blit(game.helpText,game.helpButton)
 
-        if (game.fileLoaded):
-            prevX = None
-            prevY = None
-            for aminoAcid in game.getGameSequence():
-                if (prevX!=None):
-                    pygame.draw.line(game.screen,game.black,(prevX,prevY),
-                                        (aminoAcid.particle.x,
-                                            aminoAcid.particle.y),10)
-                prevX = aminoAcid.particle.x
-                prevY = aminoAcid.particle.y
-                aminoAcid.draw(game.screen)
+        game.drawSequence()
+
 
         for event in pygame.event.get():
             if (event.type == pygame.QUIT):
@@ -488,7 +528,14 @@ def main():
             elif (event.type == pygame.MOUSEBUTTONUP):
                 if (game.fileLoaded):
                     for aminoAcid in game.getGameSequence():
-                        aminoAcid.particle.clicked=False
+                        if (aminoAcid.particle.clicked):
+                            if(game.checkLegal(aminoAcid)):
+                                aminoAcid.x = aminoAcid.particle.x
+                                aminoAcid.y = aminoAcid.particle.y
+                            else:
+                                game.undoMove(aminoAcid)
+    
+                            aminoAcid.particle.clicked=False
                   
         
                 
@@ -502,7 +549,6 @@ def main():
                             aminoAcid.particle.x = mouseX
                             aminoAcid.particle.y = mouseY
                        
-        
         
         pygame.display.update()
     pygame.quit()

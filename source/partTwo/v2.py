@@ -12,6 +12,7 @@ import os
 from tkinter import filedialog
 from tkinter import *
 import random
+import math
 
 
 #biological inheritance hierarchy:
@@ -334,6 +335,8 @@ class Game(object):
         self.green = (0,255,0)
         self.black = (0,0,0)
         self.white = (255,255,255)
+        self.red = (255,0,0)
+        self.blue = (0,0,255)
 
         self.done = False
         #initialize heights/widths based on window size
@@ -342,10 +345,20 @@ class Game(object):
         self.loadBarWidth = self.screenSize*(0.80)
         self.gameScreenWidth = self.loadBarWidth
         self.gameScreenHeight = self.screenSize*(0.9)
+
+        self.buttonWidth= self.loadBarWidth*0.1
+        self.buttonHeight = self.loadBarHeight*0.5
+
         self.loadButtonX1 = self.loadBarWidth*0.1
         self.loadButtonY1 = self.loadBarHeight*0.3
-        self.loadButtonX2 = self.loadBarWidth*0.125
-        self.loadButtonY2 = self.loadBarHeight*0.45
+        
+
+        self.clearButtonX1 = self.loadBarWidth*0.3
+        self.clearButtonY1 = self.loadButtonY1
+   
+
+        self.helpButtonX1 = self.loadBarWidth*0.5
+        self.helpButtonY1 = self.loadButtonY1
         
         #load UI objects
         self.gameScreen =pygame.Rect(0,self.loadBarHeight,self.gameScreenWidth,
@@ -354,14 +367,25 @@ class Game(object):
         self.infoBar = pygame.Rect(self.gameScreenWidth,0,self.screenSize,
                                     self.screenSize)
         self.loadButton =pygame.Rect(self.loadButtonX1,self.loadButtonY1,
-                                        self.loadButtonX2,self.loadButtonY2)
+                                        self.buttonWidth,self.buttonHeight)
+
         self.loadText = self.gamefont.render("LOAD",True,self.black)
+
+        self.clearButton =pygame.Rect(self.clearButtonX1,self.clearButtonY1,
+                                        self.buttonWidth,self.buttonHeight)
+
+        self.clearText = self.gamefont.render("CLEAR",True,self.black)
+
+        self.helpButton =pygame.Rect(self.helpButtonX1,self.helpButtonY1,
+                                        self.buttonWidth,self.buttonHeight)
+
+        self.helpText = self.gamefont.render("HELP",True,self.black)
     
     
 
     def loadFASTA(self): 
         fileName = filedialog.askopenfilename() #prompts user to specify file
-        print(fileName)
+
         if ("fasta" in fileName.lower()):
             self.gameFASTA = FASTA(fileName)
             sequence = self.gameFASTA.getSequence()
@@ -389,7 +413,10 @@ class Game(object):
             aminoAcid.x = currentX
             aminoAcid.y = currentY
             currentX+=dx
-            
+    
+    def helpScreen(self):
+        self.helpText = self.gamefont.render("HELP INFORMATION",True,self.black)        
+        self.screen.blit(self.helpText,self.gameScreen)
     
 def main():
     game = Game()
@@ -400,10 +427,19 @@ def main():
         pygame.time.delay(100)
         game.screen.fill((255,255,255))
         pygame.draw.rect(game.screen,game.black,game.gameScreen, 10)
+
         pygame.draw.rect(game.screen,game.black,game.loadBar,10)
         pygame.draw.rect(game.screen,game.black,game.infoBar,10)
+
         pygame.draw.rect(game.screen,game.green,game.loadButton)
         game.screen.blit(game.loadText,game.loadButton)
+
+        pygame.draw.rect(game.screen,game.red,game.clearButton)
+        game.screen.blit(game.clearText,game.clearButton)
+
+        pygame.draw.rect(game.screen,game.blue,game.helpButton)
+        game.screen.blit(game.helpText,game.helpButton)
+
         if (game.fileLoaded):
             prevX = None
             prevY = None
@@ -426,11 +462,28 @@ def main():
                 if (game.loadButton.collidepoint(mousePos) and left):
                     game.loadFASTA()
                     game.initializeGameScreen()
+                elif (game.clearButton.collidepoint(mousePos) and left):
+                    game.gameSequence = None
+                    game.gameFASTA = None
+                    game.fileLoaded = False
+                    print("clear")
+                
+                elif (game.helpButton.collidepoint(mousePos) and left):
+                    game.helpScreen()
+    
                 elif(game.screen.get_at(mousePos)!=game.white \
                     and game.screen.get_at(mousePos)!=game.black \
                     and mouseX<game.gameScreenWidth \
+                    and mouseY>game.loadBarHeight \
                     and mouseY<game.gameScreenHeight):
                     print("clicked")
+                    for aminoAcid in game.getGameSequence():
+                        sqx = (mouseX - aminoAcid.x)**2
+                        sqy = (mouseY - aminoAcid.y)**2
+
+                        if math.sqrt(sqx + sqy) < aminoAcid.r:
+                            print("circle clicked")
+
             elif (event.type == pygame.MOUSEBUTTONUP):
                 pass
                 

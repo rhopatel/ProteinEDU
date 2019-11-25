@@ -194,7 +194,7 @@ class ValineSideChain(FunctionalGroup):
         super().__init__(0,False,False,False)
 
 #fasta file to AminoAcid sequence translator
-class FASTATranslator(object):
+class FASTA(object):
     def __init__(self, path):
         self.path = path
         self.aminoacidsequence = []
@@ -276,27 +276,28 @@ class FASTATranslator(object):
         return codonDict
     
 def FASTAtest():
-    testTranslator = FASTATranslator("FADS.fasta")
+    testTranslator = FASTA("FADS.fasta")
     final = testTranslator.getSequence()
     module_manager.review()
     print(final) 
 
 def main():
     FASTAtest()
-
+    
     pygame.init()
     screen = pygame.display.set_mode((800,800))
     screen.fill((255,255,255))
     pygame.display.set_caption('first game')
     done = False
-
+    
     screenSize,screenSize2 = pygame.display.get_surface().get_size()
     loadBarHeight = screenSize*(0.10)
     gameScreenWidth = screenSize*(0.80)
     gameScreen = pygame.Rect(0,loadBarHeight,gameScreenWidth,screenSize)
     loadBar = pygame.Rect(0,0,gameScreenWidth,loadBarHeight)
     infoBar = pygame.Rect(gameScreenWidth,0,screenSize,screenSize)
-
+    
+    gamefile = FASTA("FADS.fasta")
     while not done:
         pygame.time.delay(100)
         screen.fill((255,255,255))

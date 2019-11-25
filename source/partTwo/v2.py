@@ -23,6 +23,8 @@ class AminoAcid(object):
         self.amine = Amine()
         self.carboxyl = Carboxyl()
         self.sidechain = sidechain
+        self.x = None
+        self.y = None
 
     def __repr__(self):
         return self.__class__.__name__
@@ -30,6 +32,9 @@ class AminoAcid(object):
     def addToChain(self):
         self.amine = None
         self.carboxyl = None
+    
+    def draw(self):
+        pass
 
 #FunctionalGroup superclass (will contain applicable method)
 class FunctionalGroup(object): #TODO: Update to be more biologically significant
@@ -286,6 +291,40 @@ class Game(object):
     def __init__(self):
         self.gameFASTA = None
         self.gameSequence = None
+        pygame.init()
+        self.screen = pygame.display.set_mode((800,800))
+        self.screen.fill((255,255,255))
+        pygame.display.set_caption("ProteinEDU")
+
+        #visual assets
+        self.gamefont = pygame.font.Font('freesansbold.ttf', 20) 
+        self.green = (0,255,0)
+        self.black = (0,0,0)
+        self.white = (255,255,255)
+
+        self.done = False
+        #initialize heights/widths based on window size
+        self.screenSize,self.screenSize2=pygame.display.get_surface().get_size()
+        self.loadBarHeight = self.screenSize*(0.10)
+        self.loadBarWidth = self.screenSize*(0.80)
+        self.gameScreenWidth = self.loadBarWidth
+        self.gameScreenHeight = self.screenSize*(0.9)
+        self.loadButtonX1 = self.loadBarWidth*0.1
+        self.loadButtonY1 = self.loadBarHeight*0.3
+        self.loadButtonX2 = self.loadBarWidth*0.125
+        self.loadButtonY2 = self.loadBarHeight*0.45
+        
+        #load UI objects
+        self.gameScreen =pygame.Rect(0,self.loadBarHeight,self.gameScreenWidth,
+                                            self.screenSize)
+        self.loadBar = pygame.Rect(0,0,self.gameScreenWidth,self.loadBarHeight)
+        self.infoBar = pygame.Rect(self.gameScreenWidth,0,self.screenSize,
+                                    self.screenSize)
+        self.loadButton =pygame.Rect(self.loadButtonX1,self.loadButtonY1,
+                                        self.loadButtonX2,self.loadButtonY2)
+        self.loadText = self.gamefont.render("LOAD",True,self.black)
+    
+    
 
     def loadFASTA(self): 
         fileName = filedialog.askopenfilename() #prompts user to specify file
@@ -306,61 +345,44 @@ class Game(object):
 
     def getGameSequence(self):
         return self.gameSequence
+    
+    def drawInitialGameScreen(self):
+        dx = self.gameScreenWidth/len(self.gameSequence)
+        currentX = dx
+        currentY = self.gameScreenHeight/2
+        for aminoAcid in self.gameSequence:
+            aminoAcid.x = currentX
+            aminoAcid.y = currentY
+            currentX+=dx
+            print(aminoAcid.x, aminoAcid.y)
+        
+
 
 def main():
     game = Game()
     #game.FASTAtest("assets//FADS.fasta")
     
-    pygame.init()
-    screen = pygame.display.set_mode((800,800))
-    screen.fill((255,255,255))
-    pygame.display.set_caption("ProteinEDU")
-
-    #visual assets
-    gamefont = pygame.font.Font('freesansbold.ttf', 20) 
-    green = (0,255,0)
-    black = (0,0,0)
-    white = (255,255,255)
-
-    done = False
-    #initialize heights/widths based on window size
-    screenSize,screenSize2 = pygame.display.get_surface().get_size()
-    loadBarHeight = screenSize*(0.10)
-    loadBarWidth = screenSize*(0.80)
-    gameScreenWidth = loadBarWidth
-    loadButtonX1 = loadBarWidth*0.1
-    loadButtonY1 = loadBarHeight*0.3
-    loadButtonX2 = loadBarWidth*0.125
-    loadButtonY2 = loadBarHeight*0.45
-    
-    #load UI objects
-    gameScreen = pygame.Rect(0,loadBarHeight,gameScreenWidth,screenSize)
-    loadBar = pygame.Rect(0,0,gameScreenWidth,loadBarHeight)
-    infoBar = pygame.Rect(gameScreenWidth,0,screenSize,screenSize)
-    loadButton =pygame.Rect(loadButtonX1,loadButtonY1,loadButtonX2,loadButtonY2)
-    loadText = gamefont.render("LOAD",True,black)
-
-    
-    while not done:
+  
+    while not game.done:
         pygame.time.delay(100)
-        screen.fill((255,255,255))
-        pygame.draw.rect(screen,black,gameScreen, 10)
-        pygame.draw.rect(screen,black,loadBar,10)
-        pygame.draw.rect(screen,black,infoBar,10)
-        pygame.draw.rect(screen,green,loadButton)
-        screen.blit(loadText,loadButton)
-
+        game.screen.fill((255,255,255))
+        pygame.draw.rect(game.screen,game.black,game.gameScreen, 10)
+        pygame.draw.rect(game.screen,game.black,game.loadBar,10)
+        pygame.draw.rect(game.screen,game.black,game.infoBar,10)
+        pygame.draw.rect(game.screen,game.green,game.loadButton)
+        game.screen.blit(game.loadText,game.loadButton)
+        
         for event in pygame.event.get():
             if (event.type == pygame.QUIT):
-                done = True
+                game.done = True
             elif (event.type == pygame.MOUSEBUTTONDOWN):
                 mousePos = pygame.mouse.get_pos()
                 left,right,middle=pygame.mouse.get_pressed()
-                if (loadButton.collidepoint(mousePos) and left):
+                if (game.loadButton.collidepoint(mousePos) and left):
                     game.loadFASTA()
-                    print(game.getGameSequence())
+                    game.drawInitialGameScreen()
         
-           
+        
         pygame.display.update()
     pygame.quit()
 

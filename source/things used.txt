@@ -1,3 +1,2 @@
 multi_key_dict
 pygame
-pygame-pgu

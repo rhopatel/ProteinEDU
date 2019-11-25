@@ -9,11 +9,9 @@ import copy
 import pygame
 import sys
 import os
-import pgu
-from pgu import gui, timer
 from tkinter import filedialog
 from tkinter import *
-
+import random
 
 
 #biological inheritance hierarchy:
@@ -232,7 +230,7 @@ class FASTA(object):
             if (line[0]==">"):
                 self.title = line[0][1:]
             else:
-                dnaSequence += (line)
+                dnaSequence += (line.upper())
         return dnaSequence
         
     def transcribe(self,dnaSequence):
@@ -286,12 +284,19 @@ class FASTA(object):
 
 class Game(object):
     def __init__(self):
-        pass
-    def loadFASTA(self):
-        fileName = filedialog.askopenfilename()
+        self.gameFASTA = None
+        self.gameSequence = None
+
+    def loadFASTA(self): 
+        fileName = filedialog.askopenfilename() #prompts user to specify file
         print(fileName)
-        gamefile = FASTA(fileName)
-        print(gamefile)
+        if ("fasta" in fileName.lower()):
+            self.gameFASTA = FASTA(fileName)
+            sequence = self.gameFASTA.getSequence()
+            start = random.randint(0,len(sequence)-6) #takes a fragment
+            self.gameSequence = sequence[start:start+5]
+        else:
+            print("WRONG FILE TYPE")
 
     def FASTAtest(self,fileName):
         testTranslator = FASTA(fileName)
@@ -299,15 +304,17 @@ class Game(object):
         module_manager.review()
         print(final) 
 
+    def getGameSequence(self):
+        return self.gameSequence
+
 def main():
     game = Game()
-    game.FASTAtest("FADS.fasta")
+    #game.FASTAtest("assets//FADS.fasta")
     
-
     pygame.init()
     screen = pygame.display.set_mode((800,800))
     screen.fill((255,255,255))
-    pygame.display.set_caption('first game')
+    pygame.display.set_caption("ProteinEDU")
 
     #visual assets
     gamefont = pygame.font.Font('freesansbold.ttf', 20) 
@@ -332,10 +339,6 @@ def main():
     infoBar = pygame.Rect(gameScreenWidth,0,screenSize,screenSize)
     loadButton =pygame.Rect(loadButtonX1,loadButtonY1,loadButtonX2,loadButtonY2)
     loadText = gamefont.render("LOAD",True,black)
-    
-    root = Tk()
-    
-
 
     
     while not done:
@@ -354,8 +357,8 @@ def main():
                 mousePos = pygame.mouse.get_pos()
                 left,right,middle=pygame.mouse.get_pressed()
                 if (loadButton.collidepoint(mousePos) and left):
-                    print("yeah")
                     game.loadFASTA()
+                    print(game.getGameSequence())
         
            
         pygame.display.update()

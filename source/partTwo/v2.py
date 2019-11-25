@@ -9,6 +9,12 @@ import copy
 import pygame
 import sys
 import os
+import pgu
+from pgu import gui, timer
+from tkinter import filedialog
+from tkinter import *
+
+
 
 #biological inheritance hierarchy:
 
@@ -275,47 +281,86 @@ class FASTA(object):
         codonDict["GGU","GGC","GGA","GGG"] =  Glycine()
         return codonDict
     
-def FASTAtest():
-    testTranslator = FASTA("FADS.fasta")
-    final = testTranslator.getSequence()
-    module_manager.review()
-    print(final) 
+    def __repr__(self):
+        return str(self.getSequence())
+
+class Game(object):
+    def __init__(self):
+        pass
+    def loadFASTA(self):
+        fileName = filedialog.askopenfilename()
+        print(fileName)
+        gamefile = FASTA(fileName)
+        print(gamefile)
+
+    def FASTAtest(self,fileName):
+        testTranslator = FASTA(fileName)
+        final = testTranslator.getSequence()
+        module_manager.review()
+        print(final) 
 
 def main():
-    FASTAtest()
+    game = Game()
+    game.FASTAtest("FADS.fasta")
     
+
     pygame.init()
     screen = pygame.display.set_mode((800,800))
     screen.fill((255,255,255))
     pygame.display.set_caption('first game')
+
+    #visual assets
+    gamefont = pygame.font.Font('freesansbold.ttf', 20) 
+    green = (0,255,0)
+    black = (0,0,0)
+    white = (255,255,255)
+
     done = False
-    
+    #initialize heights/widths based on window size
     screenSize,screenSize2 = pygame.display.get_surface().get_size()
     loadBarHeight = screenSize*(0.10)
     loadBarWidth = screenSize*(0.80)
     gameScreenWidth = loadBarWidth
+    loadButtonX1 = loadBarWidth*0.1
+    loadButtonY1 = loadBarHeight*0.3
+    loadButtonX2 = loadBarWidth*0.125
+    loadButtonY2 = loadBarHeight*0.45
     
+    #load UI objects
     gameScreen = pygame.Rect(0,loadBarHeight,gameScreenWidth,screenSize)
     loadBar = pygame.Rect(0,0,gameScreenWidth,loadBarHeight)
     infoBar = pygame.Rect(gameScreenWidth,0,screenSize,screenSize)
-    green = (0,255,0)
-    black = (0,0,0)
-    gamefile = FASTA("FADS.fasta")
+    loadButton =pygame.Rect(loadButtonX1,loadButtonY1,loadButtonX2,loadButtonY2)
+    loadText = gamefont.render("LOAD",True,black)
+    
+    root = Tk()
+    
+
+
+    
     while not done:
         pygame.time.delay(100)
         screen.fill((255,255,255))
         pygame.draw.rect(screen,black,gameScreen, 10)
         pygame.draw.rect(screen,black,loadBar,10)
         pygame.draw.rect(screen,black,infoBar,10)
-        pygame.draw.rect(screen,green,(loadBarWidth*0.1,loadBarHeight*0.3,
-                                        loadBarWidth*0.125,loadBarHeight*0.45))
+        pygame.draw.rect(screen,green,loadButton)
+        screen.blit(loadText,loadButton)
 
         for event in pygame.event.get():
             if (event.type == pygame.QUIT):
                 done = True
+            elif (event.type == pygame.MOUSEBUTTONDOWN):
+                mousePos = pygame.mouse.get_pos()
+                left,right,middle=pygame.mouse.get_pressed()
+                if (loadButton.collidepoint(mousePos) and left):
+                    print("yeah")
+                    game.loadFASTA()
+        
            
         pygame.display.update()
     pygame.quit()
+
 
 if __name__ == '__main__':
     main()

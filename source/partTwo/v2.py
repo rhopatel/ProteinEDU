@@ -292,25 +292,28 @@ def main():
     
     screenSize,screenSize2 = pygame.display.get_surface().get_size()
     loadBarHeight = screenSize*(0.10)
-    gameScreenWidth = screenSize*(0.80)
+    loadBarWidth = screenSize*(0.80)
+    gameScreenWidth = loadBarWidth
+    
     gameScreen = pygame.Rect(0,loadBarHeight,gameScreenWidth,screenSize)
     loadBar = pygame.Rect(0,0,gameScreenWidth,loadBarHeight)
     infoBar = pygame.Rect(gameScreenWidth,0,screenSize,screenSize)
-    
+    green = (0,255,0)
+    black = (0,0,0)
     gamefile = FASTA("FADS.fasta")
     while not done:
         pygame.time.delay(100)
         screen.fill((255,255,255))
-        pygame.draw.rect(screen,(0,0,0),gameScreen, 10)
-        pygame.draw.rect(screen,(0,0,0),loadBar,10)
-        pygame.draw.rect(screen,(0,0,0),infoBar,10)
+        pygame.draw.rect(screen,black,gameScreen, 10)
+        pygame.draw.rect(screen,black,loadBar,10)
+        pygame.draw.rect(screen,black,infoBar,10)
+        pygame.draw.rect(screen,green,(loadBarWidth*0.1,loadBarHeight*0.3,
+                                        loadBarWidth*0.125,loadBarHeight*0.45))
 
         for event in pygame.event.get():
             if (event.type == pygame.QUIT):
                 done = True
            
-            
-   
         pygame.display.update()
     pygame.quit()
 

@@ -18,13 +18,16 @@ import random
 
 #AminoAcid superclass (will contain applicable method)
 class AminoAcid(object):
-    def __init__(self, sidechain):
+    def __init__(self, sidechain,color):
         self.alphaCarbon = AlphaCarbon()
         self.amine = Amine()
         self.carboxyl = Carboxyl()
         self.sidechain = sidechain
         self.x = None
         self.y = None
+        self.r = 30
+        self.color = pygame.Color(color)
+        self.particle = None
 
     def __repr__(self):
         return self.__class__.__name__
@@ -33,8 +36,20 @@ class AminoAcid(object):
         self.amine = None
         self.carboxyl = None
     
-    def draw(self):
-        pass
+    def draw(self,screen):
+        self.particle = Particle(self.color,self.x,self.y,self.r)
+        self.particle.draw_particle(screen)
+        
+class Particle(object):
+    def __init__(self,color, x, y ,r):
+        self.x = x
+        self.y = y
+        self.color = color
+        self.r = r
+
+    def draw_particle(self,screen):
+        pygame.draw.circle(screen,self.color,(int(self.x),int(self.y)),self.r)
+
 
 #FunctionalGroup superclass (will contain applicable method)
 class FunctionalGroup(object): #TODO: Update to be more biologically significant
@@ -59,148 +74,165 @@ class Carboxyl(FunctionalGroup):
 class Alanine(AminoAcid):
     def __init__(self):
         sidechain = AlanineSideChain()
-        super().__init__(sidechain)   
-class Arginine(AminoAcid): #TODO: add other sidechains
+        super().__init__(sidechain,sidechain.color)   
+class Arginine(AminoAcid):
     def __init__(self):    
         sidechain = ArginineSideChain() 
-        super().__init__(sidechain)
+        super().__init__(sidechain,sidechain.color)
 class Asparagine(AminoAcid):
     def __init__(self):    
         sidechain = AsparagineSideChain() 
-        super().__init__(sidechain)
+        super().__init__(sidechain,sidechain.color)
 class AsparticAcid(AminoAcid):
     def __init__(self):    
         sidechain = AsparticAcidSideChain() 
-        super().__init__(sidechain)
+        super().__init__(sidechain,sidechain.color)
 class Cysteine(AminoAcid):
     def __init__(self):    
         sidechain = CysteineSideChain() 
-        super().__init__(sidechain)
+        super().__init__(sidechain,sidechain.color)
 class Glutamine(AminoAcid):
     def __init__(self):    
         sidechain = GlutamineSideChain() 
-        super().__init__(sidechain)
+        super().__init__(sidechain,sidechain.color)
 class GlutamicAcid(AminoAcid):
     def __init__(self):    
         sidechain = GlutamicAcidSideChain() 
-        super().__init__(sidechain)
+        super().__init__(sidechain,sidechain.color)
 class Glycine(AminoAcid):
     def __init__(self):    
         sidechain = GlycineSideChain() 
-        super().__init__(sidechain)
+        super().__init__(sidechain,sidechain.color)
 class Histidine(AminoAcid):
     def __init__(self):    
         sidechain = HistidineSideChain() 
-        super().__init__(sidechain)
+        super().__init__(sidechain,sidechain.color)
 class Isoleucine(AminoAcid):
     def __init__(self):    
         sidechain = IsoleucineSideChain() 
-        super().__init__(sidechain)
+        super().__init__(sidechain,sidechain.color)
 class Leucine(AminoAcid):
     def __init__(self):    
         sidechain = LeucineSideChain() 
-        super().__init__(sidechain)
+        super().__init__(sidechain,sidechain.color)
 class Lysine(AminoAcid):
     def __init__(self):    
         sidechain = LysineSideChain()
-        super().__init__(sidechain)
+        super().__init__(sidechain,sidechain.color)
 class Methionine(AminoAcid):
     def __init__(self):    
         sidechain = MethionineSideChain() 
-        super().__init__(sidechain)
+        super().__init__(sidechain,sidechain.color)
 class Phenylalanine(AminoAcid):
     def __init__(self):    
         sidechain = PhenylalanineSideChain() 
-        super().__init__(sidechain)
+        super().__init__(sidechain,sidechain.color)
 class Proline(AminoAcid):
     def __init__(self):    
         sidechain = ProlineSideChain() 
-        super().__init__(sidechain)
+        super().__init__(sidechain,sidechain.color)
 class Serine(AminoAcid):
     def __init__(self):    
         sidechain = SerineSideChain() 
-        super().__init__(sidechain)
+        super().__init__(sidechain,sidechain.color)
 class Threonine(AminoAcid):
     def __init__(self):    
         sidechain = ThreonineSideChain() 
-        super().__init__(sidechain)
+        super().__init__(sidechain,sidechain.color)
 class Tryptophan(AminoAcid):
     def __init__(self):    
         sidechain = TryptophanSideChain() 
-        super().__init__(sidechain)
+        super().__init__(sidechain,sidechain.color)
 class Tyrosine(AminoAcid):
     def __init__(self):    
         sidechain = TyrosineSideChain() 
-        super().__init__(sidechain)
+        super().__init__(sidechain,sidechain.color)
 class Valine(AminoAcid):
     def __init__(self):    
         sidechain = ValineSideChain() 
-        super().__init__(sidechain)
+        super().__init__(sidechain,sidechain.color)
 
 #unique sidechain functional groups (add the rest)
 class AlanineSideChain(FunctionalGroup):
     def __init__(self):
         super().__init__(0,False,False,False)
+        self.color = "green"
 class ArginineSideChain(FunctionalGroup):
     def __init__(self):
         super().__init__(1,False,True,True)
+        self.color = "red"
 class AsparagineSideChain(FunctionalGroup):
     def __init__(self):
         super().__init__(0,False,True,True)
+        self.color = "purple"
 class AsparticAcidSideChain(FunctionalGroup):
     def __init__(self):
         super().__init__(-1,False,False,True)
+        self.color = "blue"
 class CysteineSideChain(FunctionalGroup):
     def __init__(self):
         super().__init__(0,True,False,False)
+        self.color = "yellow"
 class GlutamineSideChain(FunctionalGroup):
     def __init__(self):
         super().__init__(0,False,True,True)
-class GlutamineSideChain(FunctionalGroup):
-    def __init__(self):
-        super().__init__(0,False,True,True)
+        self.color = "purple"
 class GlutamicAcidSideChain(FunctionalGroup):
     def __init__(self):    
         super().__init__(-1,False,False,True)
+        self.color = "blue"
 class GlycineSideChain(FunctionalGroup):
     def __init__(self):    
         super().__init__(0,False,False,False)
+        self.color = "green"
 class HistidineSideChain(FunctionalGroup):
     def __init__(self):    
         super().__init__(1,False,True,True)
+        self.color = "red"
 class IsoleucineSideChain(FunctionalGroup):
     def __init__(self):    
         super().__init__(0,False,False,False)
+        self.color = "green"
 class LeucineSideChain(FunctionalGroup):
     def __init__(self):    
         super().__init__(0,False,False,False)
+        self.color = "green"
 class LysineSideChain(FunctionalGroup):
     def __init__(self):    
         super().__init__(0,False,True,True)
+        self.color = "red"
 class MethionineSideChain(FunctionalGroup):
     def __init__(self):    
         super().__init__(0,True,False,False)
+        self.color = "yellow"
 class PhenylalanineSideChain(FunctionalGroup):
     def __init__(self):    
         super().__init__(0,False,False,False)
+        self.color = "green"
 class ProlineSideChain(FunctionalGroup):
     def __init__(self):    
         super().__init__(0,False,False,False)
+        self.color = "green"
 class SerineSideChain(FunctionalGroup):
     def __init__(self):    
         super().__init__(0,False,True,True)
+        self.color = "purple"
 class ThreonineSideChain(FunctionalGroup):
     def __init__(self):    
         super().__init__(0,False,True,True)
+        self.color = "purple"
 class TryptophanSideChain(FunctionalGroup):
     def __init__(self):    
         super().__init__(0,False,False,False)
+        self.color = "green"
 class TyrosineSideChain(FunctionalGroup):
     def __init__(self):    
         super().__init__(0,False,True,True)
+        self.color = "purple"
 class ValineSideChain(FunctionalGroup):
     def __init__(self):    
         super().__init__(0,False,False,False)
+        self.color = "green"
 
 #fasta file to AminoAcid sequence translator
 class FASTA(object):
@@ -291,6 +323,7 @@ class Game(object):
     def __init__(self):
         self.gameFASTA = None
         self.gameSequence = None
+        self.fileLoaded = False
         pygame.init()
         self.screen = pygame.display.set_mode((800,800))
         self.screen.fill((255,255,255))
@@ -334,8 +367,10 @@ class Game(object):
             sequence = self.gameFASTA.getSequence()
             start = random.randint(0,len(sequence)-6) #takes a fragment
             self.gameSequence = sequence[start:start+5]
+            self.fileLoaded=True
         else:
             print("WRONG FILE TYPE")
+        
 
     def FASTAtest(self,fileName):
         testTranslator = FASTA(fileName)
@@ -346,18 +381,16 @@ class Game(object):
     def getGameSequence(self):
         return self.gameSequence
     
-    def drawInitialGameScreen(self):
-        dx = self.gameScreenWidth/len(self.gameSequence)
+    def initializeGameScreen(self):
+        dx = self.gameScreenWidth/(len(self.gameSequence)+1)
         currentX = dx
         currentY = self.gameScreenHeight/2
         for aminoAcid in self.gameSequence:
             aminoAcid.x = currentX
             aminoAcid.y = currentY
             currentX+=dx
-            print(aminoAcid.x, aminoAcid.y)
-        
-
-
+            
+    
 def main():
     game = Game()
     #game.FASTAtest("assets//FADS.fasta")
@@ -371,16 +404,38 @@ def main():
         pygame.draw.rect(game.screen,game.black,game.infoBar,10)
         pygame.draw.rect(game.screen,game.green,game.loadButton)
         game.screen.blit(game.loadText,game.loadButton)
-        
+        if (game.fileLoaded):
+            prevX = None
+            prevY = None
+            for aminoAcid in game.getGameSequence():
+                
+                if (prevX!=None):
+                    pygame.draw.line(game.screen,game.black,(prevX,prevY),
+                                        (aminoAcid.x,aminoAcid.y),10)
+                prevX = aminoAcid.x
+                prevY = aminoAcid.y
+                aminoAcid.draw(game.screen)
+
         for event in pygame.event.get():
             if (event.type == pygame.QUIT):
                 game.done = True
             elif (event.type == pygame.MOUSEBUTTONDOWN):
                 mousePos = pygame.mouse.get_pos()
+                mouseX,mouseY = mousePos
                 left,right,middle=pygame.mouse.get_pressed()
                 if (game.loadButton.collidepoint(mousePos) and left):
                     game.loadFASTA()
-                    game.drawInitialGameScreen()
+                    game.initializeGameScreen()
+                elif(game.screen.get_at(mousePos)!=game.white \
+                    and game.screen.get_at(mousePos)!=game.black \
+                    and mouseX<game.gameScreenWidth \
+                    and mouseY<game.gameScreenHeight):
+                    print("clicked")
+            elif (event.type == pygame.MOUSEBUTTONUP):
+                pass
+                
+            elif (event.type == pygame.MOUSEMOTION):
+                pass
         
         
         pygame.display.update()

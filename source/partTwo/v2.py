@@ -28,7 +28,7 @@ class AminoAcid(object):
         self.y = None
         self.r = 30
         self.color = pygame.Color(color)
-        self.particle = None
+        self.particle=None
 
     def __repr__(self):
         return self.__class__.__name__
@@ -38,7 +38,6 @@ class AminoAcid(object):
         self.carboxyl = None
     
     def draw(self,screen):
-        self.particle = Particle(self.color,self.x,self.y,self.r)
         self.particle.draw_particle(screen)
         
 class Particle(object):
@@ -47,6 +46,7 @@ class Particle(object):
         self.y = y
         self.color = color
         self.r = r
+        self.clicked = False
 
     def draw_particle(self,screen):
         pygame.draw.circle(screen,self.color,(int(self.x),int(self.y)),self.r)
@@ -412,6 +412,8 @@ class Game(object):
         for aminoAcid in self.gameSequence:
             aminoAcid.x = currentX
             aminoAcid.y = currentY
+            aminoAcid.particle = Particle(aminoAcid.color,aminoAcid.x,
+                                            aminoAcid.y,aminoAcid.r)
             currentX+=dx
     
     def helpScreen(self):
@@ -424,7 +426,7 @@ def main():
     
   
     while not game.done:
-        pygame.time.delay(100)
+        pygame.time.delay(10)
         game.screen.fill((255,255,255))
         pygame.draw.rect(game.screen,game.black,game.gameScreen, 10)
 
@@ -444,12 +446,12 @@ def main():
             prevX = None
             prevY = None
             for aminoAcid in game.getGameSequence():
-                
                 if (prevX!=None):
                     pygame.draw.line(game.screen,game.black,(prevX,prevY),
-                                        (aminoAcid.x,aminoAcid.y),10)
-                prevX = aminoAcid.x
-                prevY = aminoAcid.y
+                                        (aminoAcid.particle.x,
+                                            aminoAcid.particle.y),10)
+                prevX = aminoAcid.particle.x
+                prevY = aminoAcid.particle.y
                 aminoAcid.draw(game.screen)
 
         for event in pygame.event.get():
@@ -466,29 +468,40 @@ def main():
                     game.gameSequence = None
                     game.gameFASTA = None
                     game.fileLoaded = False
-                    print("clear")
-                
+      
                 elif (game.helpButton.collidepoint(mousePos) and left):
                     game.helpScreen()
     
                 elif(game.screen.get_at(mousePos)!=game.white \
-                    and game.screen.get_at(mousePos)!=game.black \
                     and mouseX<game.gameScreenWidth \
                     and mouseY>game.loadBarHeight \
                     and mouseY<game.gameScreenHeight):
-                    print("clicked")
+        
                     for aminoAcid in game.getGameSequence():
-                        sqx = (mouseX - aminoAcid.x)**2
-                        sqy = (mouseY - aminoAcid.y)**2
+                        sqx = (mouseX - aminoAcid.particle.x)**2
+                        sqy = (mouseY - aminoAcid.particle.y)**2
 
-                        if math.sqrt(sqx + sqy) < aminoAcid.r:
-                            print("circle clicked")
+                        if (math.sqrt(sqx + sqy) < aminoAcid.r):
+
+                            aminoAcid.particle.clicked=True
 
             elif (event.type == pygame.MOUSEBUTTONUP):
-                pass
+                if (game.fileLoaded):
+                    for aminoAcid in game.getGameSequence():
+                        aminoAcid.particle.clicked=False
+                  
+        
                 
             elif (event.type == pygame.MOUSEMOTION):
-                pass
+                if (game.fileLoaded):
+                    mousePos = event.pos
+                    mouseX,mouseY = mousePos
+    
+                    for aminoAcid in game.getGameSequence():
+                        if (aminoAcid.particle.clicked):
+                            aminoAcid.particle.x = mouseX
+                            aminoAcid.particle.y = mouseY
+                       
         
         
         pygame.display.update()

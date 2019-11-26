@@ -441,7 +441,7 @@ class Game(object):
     def initializeGameScreen(self):
         dx = self.gameScreenWidth/(len(self.gameSequence)+1)
         currentX = dx
-        self.bondLength = dx * 1.5
+        self.bondLength = dx * 2.5
         currentY = self.gameScreenHeight/2
         for aminoAcid in self.gameSequence:
             aminoAcid.x = currentX
@@ -460,14 +460,15 @@ class Game(object):
         otherAminoAcids.remove(aminoAcid)
         for otherAminoAcid in otherAminoAcids:
             if (aminoAcid.particle.boundingBox.colliderect(otherAminoAcid.particle.boundingBox)):
-                print("CLL")
+                print("Collision")
                 return False
+        
         return True
     
-    def undoMove(self,aminoAcid):
-        iterations = 10
-        dx = (aminoAcid.particle.x - aminoAcid.x) / iterations
-        dy = (aminoAcid.particle.y - aminoAcid.y) / iterations
+    def undoMove(self,aminoAcid,iterations=10,dx=None,dy=None):
+        if (dx == None or dy ==None):
+            dx = (aminoAcid.particle.x - aminoAcid.x) / 10
+            dy = (aminoAcid.particle.y - aminoAcid.y) / 10
 
         for i in range(iterations):
             pygame.draw.circle(self.screen,self.white,(int(aminoAcid.particle.x),int(aminoAcid.particle.y)),aminoAcid.r)
@@ -490,7 +491,7 @@ class Game(object):
             aminoAcid.particle.y -= dy
             self.drawSequence()
 
-            pygame.time.delay(100)
+            pygame.time.delay(15)
     
     def drawSequence(self):
         if (self.fileLoaded):
@@ -582,6 +583,7 @@ def main():
                     mousePos = event.pos
                     mouseX,mouseY = mousePos
                     seq = game.getGameSequence()
+                    brokenLink = None
                     for i in range(len(seq)):
                         aminoAcid = seq[i]
                         if (aminoAcid.particle.clicked):
@@ -601,11 +603,15 @@ def main():
 
                             distance = math.sqrt(sqx+sqy)
                             if (distance>game.bondLength):
+                                aminoAcid.particle.clicked=False
+                                brokenLink=aminoAcid
                                 break
-                                    
+                                
                             
                             aminoAcid.particle.x = mouseX
                             aminoAcid.particle.y = mouseY
+                    if (brokenLink!=None):
+                        game.undoMove(brokenLink,iterations=2)
                        
         
         pygame.display.update()

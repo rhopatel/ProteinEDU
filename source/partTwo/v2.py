@@ -414,6 +414,8 @@ class Game(object):
 
         self.helpText = self.gamefont.render("HELP",True,self.black)
 
+        self.infoText = self.gamefont.render("No selection",True,self.black)
+
         
 
     def loadFASTA(self): 
@@ -508,6 +510,13 @@ class Game(object):
 
             pygame.display.update()
     
+    def displayInformation(self,aminoAcid):
+        self.infoText = self.gamefont.render(aminoAcid.name,True,self.black)        
+        
+    
+    def resetSelection(self):
+        self.infoText = self.gamefont.render("No selection",True,self.black) 
+    
 def main():
     game = Game(10)
     #game.FASTAtest("assets//FADS.fasta")
@@ -529,7 +538,8 @@ def main():
 
         pygame.draw.rect(game.screen,game.blue,game.helpButton)
         game.screen.blit(game.helpText,game.helpButton)
-
+        
+        game.screen.blit(game.infoText,game.infoBar)
         game.drawSequence()
 
 
@@ -563,6 +573,7 @@ def main():
                         if (math.sqrt(sqx + sqy) < aminoAcid.r):
 
                             aminoAcid.particle.clicked=True
+                            game.displayInformation(aminoAcid)
 
             elif (event.type == pygame.MOUSEBUTTONUP):
                 if (game.fileLoaded):

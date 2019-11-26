@@ -465,8 +465,18 @@ class Game(object):
             currentX+=dx
     
     def helpScreen(self):
-        self.helpText = self.gamefont.render("HELP INFORMATION",True,self.black)        
-        self.screen.blit(self.helpText,self.gameScreen)
+        self.helpText = self.gamefont.render("HELP INFORMATION",True,self.black)
+        helpString = """NOTE: At the moment, the help function is still under development. Until eventually incorporated into the user interface, this feature will remain inthe print console. 
+        Objective: Solve the puzzle by moving each amino acid into a satisfactory conformation.
+        GREEN- nonpolar amino acids, prefer to be near the center of the protein due to hydrophobic interaction with water
+        RED/BLUE - positive/negatively charged amino acids, prefer to be far from like charges
+        PURPLE - polar amino acids, prefer to be away from the center of the protein due to hydrophilic interaction with water
+        YELLOW - special case containing a sulfur atom, prefers to be near others with sulfur (if exists). Also nonpolar.
+
+        The amino acids that have not yet reached their optimal conformation are listed in the console, along with feedback. 
+        Load an example file, then click and drag each amino acid to move it. Keep in mind that the peptide bonds are of a fixed length."""
+        print(helpString)        
+        #self.screen.blit(self.helpText,self.gameScreen)
     
     def checkLegal(self,aminoAcid):
         print("unsolved:") 
@@ -488,8 +498,8 @@ class Game(object):
 
         sidechain = aminoAcid.sidechain
         if (not sidechain.polar):
-            if (abs(aminoAcid.particle.x-centerX)>100 or \
-                abs(aminoAcid.particle.y-centerY)>100):
+            if (abs(aminoAcid.particle.x-centerX)>75 or \
+                abs(aminoAcid.particle.y-centerY)>75):
                 print("nonpolar amino acid should be near the center")
                 return False
         elif (sidechain.polar or sidechain.charge!=0):
@@ -507,15 +517,24 @@ class Game(object):
                 if (otherAminoAcid.sidechain.charge==-1 and abs(otherAminoAcid.x-aminoAcid.particle.x) < 150):
                     print("negative charged amino acid cannot be near other negative charges")
                     return False 
-        aminoAcid.satisfied = True
-        if (self.unsolvedSequence):
+        elif (sidechain.sulfide):
+            if(sum(other.sulfide==True for other in otherAminoAcids)>0 and abs(other.x-aminoAcid.particle.x) < 75):
+                print("sulfide containing amino acids should be near other sulfide containing amino acids")
+                return False
+        elif (sidechain.hbond):
+            if(sum(other.hbond==True for other in otherAminoAcids)>0 and abs(other.x-aminoAcid.particle.x) < 50):
+                print("hbonding amino acids should be near other hbonding amino acids")
+                return False
+        if (not aminoAcid.satisfied and self.unsolvedSequence):
             self.unsolvedSequence.remove(aminoAcid)
+            aminoAcid.satisfied = True
         return True
 
     def checkForWin(self):
         for aminoAcid in self.gameSequence:
             if not aminoAcid.satisfied:
                 return False
+        print("SOLVED")
         return True
 
     def undoMove(self,aminoAcid,iterations=10,dx=None,dy=None):
@@ -580,7 +599,6 @@ def main():
     game = Game(10)
     #game.FASTAtest("assets//FADS.fasta")
 
-  
     while not game.done:
         pygame.time.delay(game.delay)
         game.screen.fill((255,255,255))
@@ -653,7 +671,6 @@ def main():
     
                             aminoAcid.particle.clicked=False
                             
-        
                 
             elif (event.type == pygame.MOUSEMOTION):
                 if (game.fileLoaded):

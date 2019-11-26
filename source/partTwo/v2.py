@@ -31,6 +31,7 @@ class AminoAcid(object):
         self.particle=None
         self.name = self.__class__.__name__
         self.abbr = abbr
+        self.satisfied = False
 
     def __repr__(self):
         return self.name
@@ -355,8 +356,9 @@ class Game(object):
         self.gameFASTA = None
         self.gameSequence = None
         self.fileLoaded = False
+
         self.delay = delay
-        
+        self.done = False
 
         pygame.init()
         self.screen = pygame.display.set_mode((800,800))
@@ -371,7 +373,7 @@ class Game(object):
         self.red = (255,0,0)
         self.blue = (0,0,255)
 
-        self.done = False
+        
         #initialize heights/widths based on window size
         self.screenSize,self.screenSize2=pygame.display.get_surface().get_size()
         self.loadBarHeight = self.screenSize*(0.10)
@@ -399,8 +401,6 @@ class Game(object):
         self.infoImageHeight = self.buttonWidth*3
 
         
-
-        
         #load UI objects
         self.gameScreen =pygame.Rect(0,self.loadBarHeight,self.gameScreenWidth,
                                             self.screenSize)
@@ -426,6 +426,7 @@ class Game(object):
         self.infoImage = pygame.image.load("assets/images/empty.png")
         self.infoImageBox = pygame.Rect(self.infoImageX,self.infoImageY,self.infoImageWidth,self.infoImageHeight)
         
+        self.gameOverText = self.gamefont.render("GAMEOVER",True,self.white)
 
     def loadFASTA(self): 
         fileName = filedialog.askopenfilename() #prompts user to specify file
@@ -436,6 +437,7 @@ class Game(object):
             start = random.randint(0,len(sequence)-6) #takes a fragment
             self.gameSequence = sequence[start:start+5]
             self.fileLoaded=True
+            self.unsolvedSequence = copy.copy(self.gameSequence)
         else:
             print("WRONG FILE TYPE")
         
@@ -467,15 +469,55 @@ class Game(object):
         self.screen.blit(self.helpText,self.gameScreen)
     
     def checkLegal(self,aminoAcid):
+        print("unsolved:") 
+        print(self.unsolvedSequence)
         otherAminoAcids = copy.copy(self.getGameSequence())
         otherAminoAcids.remove(aminoAcid)
+        totalX = 0
+        
+        totalY = 0
+        
         for otherAminoAcid in otherAminoAcids:
+            totalX+=otherAminoAcid.x
+            totalY+=otherAminoAcid.y
             if (aminoAcid.particle.boundingBox.colliderect(otherAminoAcid.particle.boundingBox)):
                 print("Collision")
                 return False
-        
+        centerX = totalX/len(otherAminoAcids)
+        centerY = totalY/len(otherAminoAcids)
+
+        sidechain = aminoAcid.sidechain
+        if (not sidechain.polar):
+            if (abs(aminoAcid.particle.x-centerX)>100 or \
+                abs(aminoAcid.particle.y-centerY)>100):
+                print("nonpolar amino acid should be near the center")
+                return False
+        elif (sidechain.polar or sidechain.charge!=0):
+            if (abs(aminoAcid.particle.x-centerX)<50 or \
+                abs(aminoAcid.particle.y-centerY)<50):
+                print("polar or charged amino acid should be near the edges")
+                return False
+        elif(sidechain.charge==1):
+            for otherAminoAcid in otherAminoAcids:
+                if (otherAminoAcid.sidechain.charge==1 and abs(otherAminoAcid.x-aminoAcid.particle.x) < 150):
+                    print("positive charged amino acid cannot be near other positive charges")
+                    return False
+        elif(sidechain.charge==-1):
+            for otherAminoAcid in otherAminoAcids:
+                if (otherAminoAcid.sidechain.charge==-1 and abs(otherAminoAcid.x-aminoAcid.particle.x) < 150):
+                    print("negative charged amino acid cannot be near other negative charges")
+                    return False 
+        aminoAcid.satisfied = True
+        if (self.unsolvedSequence):
+            self.unsolvedSequence.remove(aminoAcid)
         return True
-    
+
+    def checkForWin(self):
+        for aminoAcid in self.gameSequence:
+            if not aminoAcid.satisfied:
+                return False
+        return True
+
     def undoMove(self,aminoAcid,iterations=10,dx=None,dy=None):
         if (dx == None or dy ==None):
             dx = (aminoAcid.particle.x - aminoAcid.x) / 10
@@ -522,13 +564,18 @@ class Game(object):
     def displayInformation(self,aminoAcid):
         self.infoText = self.gamefont.render(aminoAcid.name,True,self.black)  
         path = "assets/images/" +aminoAcid.name.lower()+".png"
-        print(path)
         self.infoImage = pygame.image.load(path)
         self.infoImage = pygame.transform.scale(self.infoImage,[200,200])
 
     def resetSelection(self):
         self.infoText = self.gamefont.render("No selection",True,self.black) 
         self.infoImage= pygame.image.load("assets/images/empty.png")
+
+    def gameOver(self):
+        self.done = True
+        self.screen.fill((0,255,0))
+        self.screen.blit(self.gameOverText,self.gameScreen.center)
+        
 def main():
     game = Game(10)
     #game.FASTAtest("assets//FADS.fasta")
@@ -557,7 +604,6 @@ def main():
             
         game.screen.blit(game.infoImage, game.infoImageBox.topleft)
        
-            
 
         for event in pygame.event.get():
             if (event.type == pygame.QUIT):
@@ -600,12 +646,13 @@ def main():
                             if(game.checkLegal(aminoAcid)):
                                 aminoAcid.x = aminoAcid.particle.x
                                 aminoAcid.y = aminoAcid.particle.y
+                                if(game.checkForWin()):
+                                    game.gameOver()
                             else:
                                 game.undoMove(aminoAcid)
     
                             aminoAcid.particle.clicked=False
                             
-                  
         
                 
             elif (event.type == pygame.MOUSEMOTION):

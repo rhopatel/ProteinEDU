@@ -375,7 +375,7 @@ class Game(object):
         #initialize heights/widths based on window size
         self.screenSize,self.screenSize2=pygame.display.get_surface().get_size()
         self.loadBarHeight = self.screenSize*(0.10)
-        self.loadBarWidth = self.screenSize*(0.80)
+        self.loadBarWidth = self.screenSize*(0.70)
         self.gameScreenWidth = self.loadBarWidth
         self.gameScreenHeight = self.screenSize*(0.9)
 
@@ -389,9 +389,17 @@ class Game(object):
         self.clearButtonX1 = self.loadBarWidth*0.3
         self.clearButtonY1 = self.loadButtonY1
    
-
         self.helpButtonX1 = self.loadBarWidth*0.5
         self.helpButtonY1 = self.loadButtonY1
+
+        self.infoImageX= self.gameScreenWidth+10
+        self.infoImageY = self.gameScreenHeight * 0.15
+        
+        self.infoImageWidth = self.buttonWidth
+        self.infoImageHeight = self.buttonWidth*3
+
+        
+
         
         #load UI objects
         self.gameScreen =pygame.Rect(0,self.loadBarHeight,self.gameScreenWidth,
@@ -415,7 +423,8 @@ class Game(object):
         self.helpText = self.gamefont.render("HELP",True,self.black)
 
         self.infoText = self.gamefont.render("No selection",True,self.black)
-
+        self.infoImage = pygame.image.load("assets/images/empty.png")
+        self.infoImageBox = pygame.Rect(self.infoImageX,self.infoImageY,self.infoImageWidth,self.infoImageHeight)
         
 
     def loadFASTA(self): 
@@ -511,12 +520,15 @@ class Game(object):
             pygame.display.update()
     
     def displayInformation(self,aminoAcid):
-        self.infoText = self.gamefont.render(aminoAcid.name,True,self.black)        
-        
-    
+        self.infoText = self.gamefont.render(aminoAcid.name,True,self.black)  
+        path = "assets/images/" +aminoAcid.name.lower()+".png"
+        print(path)
+        self.infoImage = pygame.image.load(path)
+        self.infoImage = pygame.transform.scale(self.infoImage,[200,200])
+
     def resetSelection(self):
         self.infoText = self.gamefont.render("No selection",True,self.black) 
-    
+        self.infoImage= pygame.image.load("assets/images/empty.png")
 def main():
     game = Game(10)
     #game.FASTAtest("assets//FADS.fasta")
@@ -538,10 +550,14 @@ def main():
 
         pygame.draw.rect(game.screen,game.blue,game.helpButton)
         game.screen.blit(game.helpText,game.helpButton)
-        
+
         game.screen.blit(game.infoText,game.infoBar)
         game.drawSequence()
-
+        
+            
+        game.screen.blit(game.infoImage, game.infoImageBox.topleft)
+       
+            
 
         for event in pygame.event.get():
             if (event.type == pygame.QUIT):
@@ -574,6 +590,8 @@ def main():
 
                             aminoAcid.particle.clicked=True
                             game.displayInformation(aminoAcid)
+                else:
+                    game.resetSelection()
 
             elif (event.type == pygame.MOUSEBUTTONUP):
                 if (game.fileLoaded):
@@ -586,6 +604,7 @@ def main():
                                 game.undoMove(aminoAcid)
     
                             aminoAcid.particle.clicked=False
+                            
                   
         
                 

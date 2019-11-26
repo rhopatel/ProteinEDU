@@ -32,6 +32,7 @@ class AminoAcid(object):
         self.name = self.__class__.__name__
         self.abbr = abbr
         self.satisfied = False
+        self.associates = []
 
     def __repr__(self):
         return self.name
@@ -491,7 +492,7 @@ class Game(object):
             totalX+=otherAminoAcid.x
             totalY+=otherAminoAcid.y
             if (aminoAcid.particle.boundingBox.colliderect(otherAminoAcid.particle.boundingBox)):
-                print("Collision")
+                print("Collision with other amino acid!")
                 return False
         centerX = totalX/len(otherAminoAcids)
         centerY = totalY/len(otherAminoAcids)
@@ -509,22 +510,40 @@ class Game(object):
                 return False
         elif(sidechain.charge==1):
             for otherAminoAcid in otherAminoAcids:
-                if (otherAminoAcid.sidechain.charge==1 and abs(otherAminoAcid.x-aminoAcid.particle.x) < 150):
+                distance = abs(otherAminoAcid.x-aminoAcid.particle.x)
+                if (otherAminoAcid.sidechain.charge==1 and distance < 150):
                     print("positive charged amino acid cannot be near other positive charges")
                     return False
+                elif (distance>150):
+                    aminoAcid.associates.append(otherAminoAcid)
         elif(sidechain.charge==-1):
             for otherAminoAcid in otherAminoAcids:
-                if (otherAminoAcid.sidechain.charge==-1 and abs(otherAminoAcid.x-aminoAcid.particle.x) < 150):
+                distance = abs(otherAminoAcid.x-aminoAcid.particle.x)
+                if (otherAminoAcid.sidechain.charge==-1 and  distance < 150):
                     print("negative charged amino acid cannot be near other negative charges")
                     return False 
+                elif (distance > 150):
+                    aminoAcid.associates.append(otherAminoAcid)
+
         elif (sidechain.sulfide):
-            if(sum(other.sulfide==True for other in otherAminoAcids)>0 and abs(other.x-aminoAcid.particle.x) < 75):
-                print("sulfide containing amino acids should be near other sulfide containing amino acids")
-                return False
+            if(sum(other.sulfide==True for other in otherAminoAcids)>0):
+                distance = abs(other.x-aminoAcid.particle.x)
+                if(distance < 75):
+                    print("sulfide containing amino acids should be near other sulfide containing amino acids")
+                    return False
+                else:
+                    aminoAcid.associates.append(other)
+            
         elif (sidechain.hbond):
-            if(sum(other.hbond==True for other in otherAminoAcids)>0 and abs(other.x-aminoAcid.particle.x) < 50):
-                print("hbonding amino acids should be near other hbonding amino acids")
-                return False
+            if(sum(other.hbond==True for other in otherAminoAcids)>0):
+                distance = abs(other.x-aminoAcid.particle.x)
+                if(distance < 75):
+                    print("hbonding amino acids should be near other hbonding amino acids")
+                    return False
+                else:
+                    aminoAcid.associates.append(other)
+    
+            
         if (not aminoAcid.satisfied and self.unsolvedSequence):
             self.unsolvedSequence.remove(aminoAcid)
             aminoAcid.satisfied = True
@@ -534,7 +553,7 @@ class Game(object):
         for aminoAcid in self.gameSequence:
             if not aminoAcid.satisfied:
                 return False
-        print("SOLVED")
+        print("SOLVED!!!")
         return True
 
     def undoMove(self,aminoAcid,iterations=10,dx=None,dy=None):
@@ -577,6 +596,15 @@ class Game(object):
                 prevX = aminoAcid.particle.x
                 prevY = aminoAcid.particle.y
                 aminoAcid.draw(self)
+                for associate in aminoAcid.associates:
+                    if (aminoAcid.sulfide and associate.sulfide):
+                        pygame.draw.line(self.screen,self.yellow,(associate.x,associate.y),
+                                                (aminoAcid.particle.x,
+                                                aminoAcid.particle.y),10)
+                    elif (aminoAcid.hbond and associate.bond):
+                        pygame.draw.line(self.screen,self.blue,(associate.x,associate.y),
+                                                (aminoAcid.particle.x,
+                                                aminoAcid.particle.y),10)
 
             pygame.display.update()
     

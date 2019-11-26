@@ -36,6 +36,6 @@ multi_key_dict
 
 
 TP2 UPDATES:
-None
+After having created the backbone of the user interface, thankfully I have been able to realize (or am on track to build) most of the features/designs that I had originally planned for the term project. However, for simplicity's sake (and to produce a better product), I have chosen to omit drawing the actual functional groups on the amino acid. I believe that the chemical structure featured on the information tab gives the user enough info about that, and there is no need to complicate the game screen with protruding functional groups. As such, each amino acid will remain purely as a "bead on a string".
 
 

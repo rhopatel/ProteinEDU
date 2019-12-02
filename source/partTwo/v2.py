@@ -625,7 +625,7 @@ class Game(object):
         
 def main():
     game = Game(10)
-    #game.FASTAtest("assets//FADS.fasta")
+    game.FASTAtest("assets/data/lab.fasta")
 
     while not game.done:
         pygame.time.delay(game.delay)

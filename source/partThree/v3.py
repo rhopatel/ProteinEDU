@@ -373,7 +373,7 @@ class Game(object):
         self.white = (255,255,255)
         self.red = (255,0,0)
         self.blue = (0,0,255)
-
+        self.yellow = (255,255,0)
         
         #initialize heights/widths based on window size
         self.screenSize,self.screenSize2=pygame.display.get_surface().get_size()
@@ -498,7 +498,21 @@ class Game(object):
 
         sidechain = aminoAcid.sidechain
         threshold = (self.gameScreenWidth/7)
-        if (not sidechain.polar):
+
+        if (sidechain.sulfide):
+            for other in otherAminoAcids:
+                if(other.sidechain.sulfide==True):
+                    distance = abs(other.x-aminoAcid.particle.x)
+                    if(distance > threshold/2):
+                        print("sulfide containing amino acids should be near other sulfide containing amino acids")
+                        return False
+                    else:
+                        print("yeet")
+                        aminoAcid.associates.append(other)
+                    print("huh")
+            
+
+        elif (not sidechain.polar):
             if (abs(aminoAcid.particle.x-centerX)>threshold or \
                 abs(aminoAcid.particle.y-centerY)>threshold):
                 print("nonpolar amino acid should be near the center")
@@ -508,32 +522,30 @@ class Game(object):
                 abs(aminoAcid.particle.y-centerY)<threshold/4):
                 print("polar or charged amino acid should be near the edges")
                 return False
+
         elif(sidechain.charge==1):
             for otherAminoAcid in otherAminoAcids:
                 distance = abs(otherAminoAcid.x-aminoAcid.particle.x)
-                if (otherAminoAcid.sidechain.charge==1 and distance < threshold*1.5):
-                    print("positive charged amino acid cannot be near other positive charges")
-                    return False
-                elif (distance>150):
-                    aminoAcid.associates.append(otherAminoAcid)
+                if (otherAminoAcid.sidechain.charge==-1):
+                    if (distance < threshold*1.5):
+                        print("positive charged amino acid cannot be near other positive charges")
+                        return False 
+                    else:
+                        #possibly animate
+                        pass
+     
         elif(sidechain.charge==-1):
             for otherAminoAcid in otherAminoAcids:
                 distance = abs(otherAminoAcid.x-aminoAcid.particle.x)
-                if (otherAminoAcid.sidechain.charge==-1 and  distance < threshold*1.5):
-                    print("negative charged amino acid cannot be near other negative charges")
-                    return False 
-                elif (distance > threshold*1.5):
-                    aminoAcid.associates.append(otherAminoAcid)
+                if (otherAminoAcid.sidechain.charge==-1):
+                    if (distance < threshold*1.5):
+                        print("negative charged amino acid cannot be near other negative charges")
+                        return False 
+                    else:
+                        #possibly animate
+                        pass
 
-        elif (sidechain.sulfide):
-            if(sum(other.sulfide==True for other in otherAminoAcids)>0):
-                distance = abs(other.x-aminoAcid.particle.x)
-                if(distance > threshold/2):
-                    print("sulfide containing amino acids should be near other sulfide containing amino acids")
-                    return False
-                else:
-                    aminoAcid.associates.append(other)
-            
+
         elif (sidechain.hbond):
             if(sum(other.hbond==True for other in otherAminoAcids)>0):
                 distance = abs(other.x-aminoAcid.particle.x)
@@ -596,8 +608,10 @@ class Game(object):
                 prevX = aminoAcid.particle.x
                 prevY = aminoAcid.particle.y
                 aminoAcid.draw(self)
+                #print(aminoAcid.associates)
                 for associate in aminoAcid.associates:
-                    if (aminoAcid.sulfide and associate.sulfide):
+                    print("yay")
+                    if (aminoAcid.sidechain.sulfide and associate.sidechain.sulfide):
                         pygame.draw.line(self.screen,self.yellow,(associate.x,associate.y),
                                                 (aminoAcid.particle.x,
                                                 aminoAcid.particle.y),10)

@@ -362,7 +362,7 @@ class Game(object):
         self.done = False
 
         pygame.init()
-        self.screen = pygame.display.set_mode((800,800))
+        self.screen = pygame.display.set_mode((1000,1000))
         self.screen.fill((255,255,255))
         pygame.display.set_caption("ProteinEDU")
 
@@ -480,12 +480,11 @@ class Game(object):
         #self.screen.blit(self.helpText,self.gameScreen)
     
     def checkLegal(self,aminoAcid):
-        print("unsolved:") 
+        print("unsolved:", end="") 
         print(self.unsolvedSequence)
         otherAminoAcids = copy.copy(self.getGameSequence())
         otherAminoAcids.remove(aminoAcid)
         totalX = 0
-        
         totalY = 0
         
         for otherAminoAcid in otherAminoAcids:
@@ -498,20 +497,21 @@ class Game(object):
         centerY = totalY/len(otherAminoAcids)
 
         sidechain = aminoAcid.sidechain
+        threshold = (self.gameScreenWidth/7)
         if (not sidechain.polar):
-            if (abs(aminoAcid.particle.x-centerX)>75 or \
-                abs(aminoAcid.particle.y-centerY)>75):
+            if (abs(aminoAcid.particle.x-centerX)>threshold or \
+                abs(aminoAcid.particle.y-centerY)>threshold):
                 print("nonpolar amino acid should be near the center")
                 return False
         elif (sidechain.polar or sidechain.charge!=0):
-            if (abs(aminoAcid.particle.x-centerX)<50 or \
-                abs(aminoAcid.particle.y-centerY)<50):
+            if (abs(aminoAcid.particle.x-centerX)<threshold/4 or \
+                abs(aminoAcid.particle.y-centerY)<threshold/4):
                 print("polar or charged amino acid should be near the edges")
                 return False
         elif(sidechain.charge==1):
             for otherAminoAcid in otherAminoAcids:
                 distance = abs(otherAminoAcid.x-aminoAcid.particle.x)
-                if (otherAminoAcid.sidechain.charge==1 and distance < 150):
+                if (otherAminoAcid.sidechain.charge==1 and distance < threshold*1.5):
                     print("positive charged amino acid cannot be near other positive charges")
                     return False
                 elif (distance>150):
@@ -519,16 +519,16 @@ class Game(object):
         elif(sidechain.charge==-1):
             for otherAminoAcid in otherAminoAcids:
                 distance = abs(otherAminoAcid.x-aminoAcid.particle.x)
-                if (otherAminoAcid.sidechain.charge==-1 and  distance < 150):
+                if (otherAminoAcid.sidechain.charge==-1 and  distance < threshold*1.5):
                     print("negative charged amino acid cannot be near other negative charges")
                     return False 
-                elif (distance > 150):
+                elif (distance > threshold*1.5):
                     aminoAcid.associates.append(otherAminoAcid)
 
         elif (sidechain.sulfide):
             if(sum(other.sulfide==True for other in otherAminoAcids)>0):
                 distance = abs(other.x-aminoAcid.particle.x)
-                if(distance < 75):
+                if(distance > threshold/2):
                     print("sulfide containing amino acids should be near other sulfide containing amino acids")
                     return False
                 else:
@@ -645,11 +645,12 @@ def main():
         game.screen.blit(game.helpText,game.helpButton)
 
         game.screen.blit(game.infoText,game.infoBar)
-        game.drawSequence()
-        
             
         game.screen.blit(game.infoImage, game.infoImageBox.topleft)
        
+        game.drawSequence()
+        
+        
 
         for event in pygame.event.get():
             if (event.type == pygame.QUIT):
@@ -735,7 +736,6 @@ def main():
                     if (brokenLink!=None):
                         game.undoMove(brokenLink,iterations=2)
                        
-        
         pygame.display.update()
     pygame.quit()
 

@@ -511,38 +511,12 @@ class Game(object):
                 if(other.sidechain.sulfide):
                     distance = abs(other.x-aminoAcid.particle.x)
                     if(distance > threshold/2):
-                        print("sulfide containing amino acids should be near other sulfide containing amino 
+                        print("sulfide containing amino acids should be near other sulfide containing amino acids")
                         return False
                     else:
                         return self.satisfiedInteraction(aminoAcid, other)
-
-        if (sidechain.hbond):
-            for other in otherAminoAcids:
-                if(other.sidechain.hbond):
-                    distance = abs(other.x-aminoAcid.particle.x)
-                    if(distance > threshold/2):
-                        print("hbonding amino acids should be near other hbonding amino acids")
-                        return False
-                    else:
-                        return self.satisfiedInteraction(aminoAcid, other)
-
-
-        elif (not sidechain.polar):
-            if (abs(aminoAcid.particle.x-centerX)>threshold or \
-                abs(aminoAcid.particle.y-centerY)>threshold):
-                print("nonpolar amino acid should be near the 
-            else:
-                return self.satisfiedLocation(aminoAcid)
-
-        elif (sidechain.polar or sidechain.charge!=0):
-            if (abs(aminoAcid.particle.x-centerX)<threshold/4 or \
-                abs(aminoAcid.particle.y-centerY)<threshold/4):
-                print("polar or charged amino acid should be near 
-                return False
-            else:
-                return self.satisfiedLocation(aminoAcid)
-
-        elif(sidechain.charge==1):
+        
+         elif(sidechain.charge==1):
             for other in otherAminoAcids:
                 distance = abs(otherAminoAcid.x-aminoAcid.particle.x)
                 if (other.sidechain.charge==-1):
@@ -570,19 +544,36 @@ class Game(object):
                     if (distance < threshold*1.5):
                         return self.satisfiedInteraction(aminoAcid, other)
     
+
+        if (sidechain.hbond):
+            for other in otherAminoAcids:
+                if(other.sidechain.hbond):
+                    distance = abs(other.x-aminoAcid.particle.x)
+                    if(distance > threshold/2):
+                        print("hbonding amino acids should be near other hbonding amino acids")
+                        return False
+                    else:
+                        return self.satisfiedInteraction(aminoAcid, other)
+
+
+        elif (not sidechain.polar):
+            if (abs(aminoAcid.particle.x-centerX)>threshold or \
+                abs(aminoAcid.particle.y-centerY)>threshold):
+                print("nonpolar amino acid should be near the center of the protein")
+            else:
+                return self.satisfiedLocation(aminoAcid)
+
+        elif (sidechain.polar or sidechain.charge!=0):
+            if (abs(aminoAcid.particle.x-centerX)<threshold/4 or \
+                abs(aminoAcid.particle.y-centerY)<threshold/4):
+                print("polar or charged amino acid should be near the outside of the protein")
+                return False
+            else:
+                return self.satisfiedLocation(aminoAcid)
+
+       
         return True
 
-    def unsatisfiedInteraction(self,aminoAcid,other):
-        if (other in aminoAcid.associates):
-            aminoAcid.associates.remove(other)
-        if (aminoAcid in other.associates):
-            other.associates.remove(aminoAcid)
-        aminoAcid.satisfied = False
-        if (aminoAcid not in self.unsolvedSequence):
-            self.unsolvedSequence.append(aminoAcid)
-        print("interaction bad") #include other
-
-        return False 
     
     def satisfiedInteraction(self,aminoAcid, other):
         aminoAcid.associates.add(other)
@@ -595,14 +586,7 @@ class Game(object):
             self.unsolvedSequence.remove(other)
         print("interaction gud")
         return True
-    
-    def unsatisfiedLocation(self,aminoAcid):
-        aminoAcid.satisfied = False
-        if (aminoAcid not in self.unsolvedSequence):
-            self.unsolvedSequence.append(aminoAcid)
-        print("location bad")
-        return False 
-    
+
     def satisfiedLocation(self,aminoAcid):
         aminoAcid.satisfied = True
         if (aminoAcid in self.unsolvedSequence):

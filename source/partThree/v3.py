@@ -505,6 +505,7 @@ class Game(object):
 
         sidechain = aminoAcid.sidechain
         threshold = (self.gameScreenWidth/7)
+  
 
         if (sidechain.sulfide):
             for other in otherAminoAcids:
@@ -512,17 +513,17 @@ class Game(object):
                     distance = abs(other.x-aminoAcid.particle.x)
                     if(distance > threshold/2):
                         print("sulfide containing amino acids should be near other sulfide containing amino acids")
-                        return False
+                  
                     else:
                         return self.satisfiedInteraction(aminoAcid, other)
         
-         elif(sidechain.charge==1):
+        if(sidechain.charge==1):
             for other in otherAminoAcids:
                 distance = abs(otherAminoAcid.x-aminoAcid.particle.x)
                 if (other.sidechain.charge==-1):
                     if (distance < threshold*1.5):
                         print("positive charged amino acid cannot be near other positive charges")
-                        return False
+                  
                     else:
                         #possibly animate
                         pass
@@ -530,13 +531,13 @@ class Game(object):
                     if (distance < threshold*1.5):
                         return self.satisfiedInteraction(aminoAcid, other)
      
-        elif(sidechain.charge==-1):
+        if(sidechain.charge==-1):
             for other in otherAminoAcids:
                 distance = abs(other.x-aminoAcid.particle.x)
                 if (other.sidechain.charge==1):
                     if (distance < threshold*1.5):
                         print("negative charged amino acid cannot be near other negative charges")
-                        return False
+                  
                     else:
                         #possibly animate
                         pass
@@ -551,28 +552,29 @@ class Game(object):
                     distance = abs(other.x-aminoAcid.particle.x)
                     if(distance > threshold/2):
                         print("hbonding amino acids should be near other hbonding amino acids")
-                        return False
+                     
                     else:
                         return self.satisfiedInteraction(aminoAcid, other)
 
 
-        elif (not sidechain.polar):
+        if (not sidechain.polar):
             if (abs(aminoAcid.particle.x-centerX)>threshold or \
                 abs(aminoAcid.particle.y-centerY)>threshold):
                 print("nonpolar amino acid should be near the center of the protein")
+                
             else:
                 return self.satisfiedLocation(aminoAcid)
 
-        elif (sidechain.polar or sidechain.charge!=0):
+        if (sidechain.polar or sidechain.charge!=0):
             if (abs(aminoAcid.particle.x-centerX)<threshold/4 or \
                 abs(aminoAcid.particle.y-centerY)<threshold/4):
                 print("polar or charged amino acid should be near the outside of the protein")
-                return False
+                
             else:
                 return self.satisfiedLocation(aminoAcid)
 
        
-        return True
+        return False
 
     
     def satisfiedInteraction(self,aminoAcid, other):
@@ -584,14 +586,14 @@ class Game(object):
             self.unsolvedSequence.remove(aminoAcid)
         if (other in self.unsolvedSequence):
             self.unsolvedSequence.remove(other)
-        print("interaction gud")
+        print("interaction good")
         return True
 
     def satisfiedLocation(self,aminoAcid):
         aminoAcid.satisfied = True
         if (aminoAcid in self.unsolvedSequence):
             self.unsolvedSequence.remove(aminoAcid)
-        print("location gud")
+        print("location good")
         return True
 
     def checkAssociates(self,aminoAcid):
@@ -749,6 +751,8 @@ def main():
 
                             aminoAcid.particle.clicked=True
                             game.displayInformation(aminoAcid)
+                        else:
+                            print("bond overextended")
                             
                 else:
                     game.resetSelection()
@@ -763,7 +767,7 @@ def main():
                                 and mouseX<game.gameScreenWidth and mouseY < game.gameScreenHeight):
                                 aminoAcid.x = aminoAcid.particle.x
                                 aminoAcid.y = aminoAcid.particle.y
-                                game.checkAssociates(aminoAcid)
+                                #game.checkAssociates(aminoAcid)
                                 if(game.checkForWin()):
                                     game.gameOver()
                             else:

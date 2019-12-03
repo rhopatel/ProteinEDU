@@ -9,16 +9,18 @@ Amino acid chemical picture glitching out ✓
 
 Build list:
 
-1) Build a working UI that incorporates the current command line help
+
+1) fix h-bond and disulfide bridge drawing
+  - h bonds are not drawn, also consult textbook
+
+2) Build a working UI that incorporates the current command line help
   - help screen
   - info screen
   - formatted everything properly
 
-2) Fix all graphical glitches
+3) Fix all graphical glitches
   - text and lines glitching
   
   
-3) add h-bond and disulfide bridge drawing
-
 
 

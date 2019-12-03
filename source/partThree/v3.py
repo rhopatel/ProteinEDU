@@ -639,7 +639,7 @@ class Game(object):
                         pygame.draw.line(self.screen,self.blue,(associate.particle.x,associate.particle.y),
                                                 (aminoAcid.particle.x,
                                                 aminoAcid.particle.y),10)
-                    elif (abs(sidechain.charge-other.sidechain.charge)==1):
+                    elif (abs(aminoAcid.sidechain.charge - other.sidechain.charge)==1):
                         pygame.draw.line(self.screen,self.purple,(associate.particle.x,associate.particle.y),
                                                 (aminoAcid.particle.x,
                                                 aminoAcid.particle.y),10)                            

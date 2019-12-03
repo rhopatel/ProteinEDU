@@ -1,0 +1,7 @@
+make the user interface look nicer (reformat)
+incorporate help/splash screens to teach the user how to play the game
+fix graphics glitches and make it smoother
+add the autosolve feature to increase algorithmic complexity
+game over slower (save image)
+fix solving glitches
+change background possibly

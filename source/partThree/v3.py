@@ -13,6 +13,7 @@ from tkinter import filedialog
 from tkinter import *
 import random
 import math
+import tkinter
 
 
 #biological inheritance hierarchy:
@@ -367,12 +368,18 @@ class Game(object):
         self.done = False
 
         pygame.init()
-        self.screen = pygame.display.set_mode((1000,1000))
+        self.root = tkinter.Tk()
+        self.width = self.root.winfo_screenwidth()
+        self.height = self.root.winfo_screenheight()
+        self.screen = pygame.display.set_mode((self.width,self.height),pygame.RESIZABLE)
+        #do not move the window please
         self.screen.fill((255,255,255))
         pygame.display.set_caption("ProteinEDU")
 
         #visual assets
         self.gamefont = pygame.font.Font('freesansbold.ttf', 20) 
+        self.namefont = pygame.font.Font('freesansbold.ttf', 30) 
+        self.titlefont = pygame.font.Font('freesansbold.ttf', 50) 
         self.green = (0,255,0)
         self.black = (0,0,0)
         self.white = (255,255,255)
@@ -380,8 +387,16 @@ class Game(object):
         self.blue = (0,0,255)
         self.yellow = (255,255,0)
         self.purple = (255,0,255)
-        #initialize heights/widths based on window size
         self.screenSize,self.screenSize2=pygame.display.get_surface().get_size()
+
+        #splash screen
+        #initialize heights/widths based on window size
+
+        self.titleText = self.titlefont.render("ProteinEDU",True,self.purple)
+        
+
+        #game runtime screen
+        #initialize heights/widths based on window size
         self.loadBarHeight = self.screenSize*(0.10)
         self.loadBarWidth = self.screenSize*(0.70)
         self.gameScreenWidth = self.loadBarWidth
@@ -428,11 +443,13 @@ class Game(object):
 
         self.helpText = self.gamefont.render("HELP",True,self.black)
 
-        self.infoText = self.gamefont.render("No selection",True,self.black)
-        self.infoImage = pygame.image.load("assets/images/empty.png")
+        self.resetSelection()
         self.infoImageBox = pygame.Rect(self.infoImageX,self.infoImageY,self.infoImageWidth,self.infoImageHeight)
         
         self.gameOverText = self.gamefont.render("GAMEOVER",True,self.white)
+
+
+
 
     def loadFASTA(self): 
         fileName = filedialog.askopenfilename() #prompts user to specify file
@@ -473,7 +490,6 @@ class Game(object):
             currentX+=dx
     
     def helpScreen(self):
-        self.helpText = self.gamefont.render("HELP INFORMATION",True,self.black)
         helpString = """NOTE: At the moment, the help function is still under development. Until eventually incorporated into the user interface, this feature will remain inthe print console. 
         Objective: Solve the puzzle by moving each amino acid into a satisfactory conformation.
         GREEN- nonpolar amino acids, prefer to be near the center of the protein due to hydrophobic interaction with water
@@ -595,7 +611,7 @@ class Game(object):
             self.unsolvedSequence.remove(aminoAcid)
         print("location good")
         return True
-
+    '''
     def checkAssociates(self,aminoAcid):
         otherAminoAcids = copy.copy(self.getGameSequence())
         otherAminoAcids.remove(aminoAcid)
@@ -611,7 +627,7 @@ class Game(object):
                 self.unsolvedSequence.append(aminoAcid)
                 aminoAcid.associates.remove(associate)
                 associate.associates.remove(aminoAcid)
-
+        '''
     def checkForWin(self):
         for aminoAcid in self.gameSequence:
             if not aminoAcid.satisfied:
@@ -677,13 +693,13 @@ class Game(object):
             pygame.display.update()
     
     def displayInformation(self,aminoAcid):
-        self.infoText = self.gamefont.render(aminoAcid.name,True,self.black)  
+        self.infoText = self.namefont.render(aminoAcid.name,True,self.black)  
         path = "assets/images/" +aminoAcid.name.lower()+".png"
         self.infoImage = pygame.image.load(path)
         self.infoImage = pygame.transform.scale(self.infoImage,[200,200])
 
     def resetSelection(self):
-        self.infoText = self.gamefont.render("No selection",True,self.black) 
+        self.infoText = self.namefont.render("No selection",True,self.black) 
         self.infoImage= pygame.image.load("assets/images/empty.png")
 
     def gameOver(self):
@@ -694,7 +710,7 @@ class Game(object):
 def main():
     game = Game(10)
     #game.FASTAtest("assets/data/lab.fasta")
-
+    intro(game)
     while not game.done:
         pygame.time.delay(game.delay)
         game.screen.fill((255,255,255))
@@ -773,7 +789,6 @@ def main():
                             else:
                                
                                 game.undoMove(aminoAcid)
-    
                             aminoAcid.particle.clicked=False
                             
                 
@@ -816,6 +831,24 @@ def main():
                        
         pygame.display.update()
     pygame.quit()
+
+def intro(game):
+    introDone = False
+    while (not introDone):
+        #print("yay")
+        game.screen.fill((255,255,255))
+        game.screen.blit(game.titleText,(game.screenSize/3,game.screenSize/6))
+        for event in pygame.event.get():
+            if (event.type == pygame.MOUSEBUTTONDOWN):
+                introDone=True
+            if (event.type == pygame.QUIT):
+                game.done = True
+                
+        pygame.display.update() 
+
+            
+
+            
 
 
 if __name__ == '__main__':

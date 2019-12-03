@@ -7,26 +7,33 @@ Amino acid chemical picture glitching out ✓
 
 
 
-Build list:
+
+Done list:
 
 
 1) fix h-bond, electrostatic, and disulfide bridge drawing
   - h bonds and electrostatic are not drawn, also consult textbook
 	- draw dotted lines
 
-1a) fix the "no attribute" error
+1a) fix the "no attribute" error 
+
+Do list:
 
 2) Build a working UI that incorporates the current command line help (converting all print statements to into the interface)
   - help screen (possibly with images from textbook)
   - info screen
-  - formatted everything properly
+  - formatted everything properly (change magic numbers and values)
 
-3) Autosolve feature
+3) Configure path to work with Mac
+
+4) Autosolve feature
  - design and implement
 
-4) Fix all graphical glitches
+5) Fix all graphical glitches
   - text and lines glitching
   
+6) Dashed lines
+
 
 
 Limitations (for simplicities' sake):
@@ -34,6 +41,7 @@ Limitations (for simplicities' sake):
 Only primary structure (in 2D) is shown
 Interactions between real and partial charges (dipole-ion) are not taken into account
 Interactions between sidechains and backbones are ignored
+Amino Acids are represented only as circles
 To determine amino acid "satisfaction", both location and interaction are considered (in other words, a polar AA has only to hbond OR be at the edge to be satisfied)
 
 

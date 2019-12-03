@@ -582,7 +582,7 @@ class Game(object):
         aminoAcid.satisfied = False
         if (aminoAcid not in self.unsolvedSequence):
             self.unsolvedSequence.append(aminoAcid)
-        print("interaction bad")
+        print("interaction bad") #include other
 
         return False 
     
@@ -590,8 +590,11 @@ class Game(object):
         aminoAcid.associates.add(other)
         other.associates.add(aminoAcid)
         aminoAcid.satisfied = True
+        other.satisfied = True
         if (aminoAcid in self.unsolvedSequence):
             self.unsolvedSequence.remove(aminoAcid)
+        if (other in self.unsolvedSequence):
+            self.unsolvedSequence.remove(other)
         print("interaction gud")
         return True
     

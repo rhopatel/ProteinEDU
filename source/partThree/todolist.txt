@@ -1,0 +1,24 @@
+Issues:
+
+Graphics text glitching out when objects moved 
+Amino acids get stuck sometimes after being moved ✓
+Occasional crash due to some string issue (misread??)
+Amino acid chemical picture glitching out ✓
+
+
+
+Build list:
+
+1) Build a working UI that incorporates the current command line help
+  - help screen
+  - info screen
+  - formatted everything properly
+
+2) Fix all graphical glitches
+  - text and lines glitching
+  
+  
+3) add h-bond and disulfide bridge drawing
+
+
+

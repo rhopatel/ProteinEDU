@@ -1,4 +1,0 @@
-Graphics text glitching out when objects moved 
-Amino acids get stuck sometimes after being moved
-Occasional crash due to some string issue (misread??)
-Amino acid chemical picture glitching out ✓

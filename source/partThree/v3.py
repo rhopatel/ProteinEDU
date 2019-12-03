@@ -32,7 +32,7 @@ class AminoAcid(object):
         self.name = self.__class__.__name__
         self.abbr = abbr
         self.satisfied = False
-        self.associates = []
+        self.associates = set()
 
     def __repr__(self):
         return self.name
@@ -271,7 +271,7 @@ class ValineSideChain(FunctionalGroup):
 class FASTA(object):
     def __init__(self, path):
         self.path = path
-        self.aminoacidsequence = set()
+        self.aminoacidsequence = []
         self.title = None
         self.codonDict = self.makeCodonDict()
         sequence = self.FASTAtranslate(path)
@@ -508,69 +508,112 @@ class Game(object):
 
         if (sidechain.sulfide):
             for other in otherAminoAcids:
-                if(other.sidechain.sulfide==True):
+                if(other.sidechain.sulfide):
                     distance = abs(other.x-aminoAcid.particle.x)
                     if(distance > threshold/2):
                         print("sulfide containing amino acids should be near other sulfide containing amino acids")
-                        return False
-                    
+                        return self.unsatisfiedInteraction(aminoAcid, other)
+                    else:
+                        return self.satisfiedInteraction(aminoAcid, other)
+
+        if (sidechain.hbond):
+            for other in otherAminoAcids:
+                if(other.sidechain.hbond):
+                    distance = abs(other.x-aminoAcid.particle.x)
+                    if(distance > threshold/2):
+                        print("hbonding amino acids should be near other hbonding amino acids")
+                        return self.unsatisfiedInteraction(aminoAcid, other)
+                    else:
+                        return self.satisfiedInteraction(aminoAcid, other)
+
 
         elif (not sidechain.polar):
             if (abs(aminoAcid.particle.x-centerX)>threshold or \
                 abs(aminoAcid.particle.y-centerY)>threshold):
                 print("nonpolar amino acid should be near the center")
-                return False
+                return self.unsatisfiedLocation(aminoAcid)
+            else:
+                return self.satisfiedLocation(aminoAcid)
+
         elif (sidechain.polar or sidechain.charge!=0):
             if (abs(aminoAcid.particle.x-centerX)<threshold/4 or \
                 abs(aminoAcid.particle.y-centerY)<threshold/4):
                 print("polar or charged amino acid should be near the edges")
-                return False
+                aminoAcid.satisfied = False
+                return self.unsatisfiedLocation(aminoAcid)
+            else:
+                return self.satisfiedLocation(aminoAcid)
 
         elif(sidechain.charge==1):
-            for otherAminoAcid in otherAminoAcids:
+            for other in otherAminoAcids:
                 distance = abs(otherAminoAcid.x-aminoAcid.particle.x)
-                if (otherAminoAcid.sidechain.charge==-1):
+                if (other.sidechain.charge==-1):
                     if (distance < threshold*1.5):
                         print("positive charged amino acid cannot be near other positive charges")
-                        return False 
+                        return self.unsatisfiedInteraction(aminoAcid,other)
                     else:
                         #possibly animate
                         pass
-                elif (otherAminoAcid.sidechain.charge==1):
+                elif (other.sidechain.charge==1):
                     if (distance < threshold*1.5):
-                        print("positive charged amino acid cannot be near other positive charges")
-                        return False 
+                        return self.satisfiedInteraction(aminoAcid, other)
      
         elif(sidechain.charge==-1):
-            for otherAminoAcid in otherAminoAcids:
-                distance = abs(otherAminoAcid.x-aminoAcid.particle.x)
-                if (otherAminoAcid.sidechain.charge==-1):
+            for other in otherAminoAcids:
+                distance = abs(other.x-aminoAcid.particle.x)
+                if (other.sidechain.charge==1):
                     if (distance < threshold*1.5):
                         print("negative charged amino acid cannot be near other negative charges")
-                        return False 
+                        return self.unsatisfiedInteraction(aminoAcid,other)
                     else:
                         #possibly animate
                         pass
+                elif (other.sidechain.charge==1):
+                    if (distance < threshold*1.5):
+                        return self.satisfiedInteraction(aminoAcid, other)
     
-                
-            
-        if (not aminoAcid.satisfied and self.unsolvedSequence):
-            self.unsolvedSequence.remove(aminoAcid)
-            aminoAcid.satisfied = True
         return True
+
+    def unsatisfiedInteraction(self,aminoAcid,other):
+        if (other in aminoAcid.associates):
+            aminoAcid.associates.remove(other)
+        if (aminoAcid in other.associates):
+            other.associates.remove(aminoAcid)
+        aminoAcid.satisfied = False
+        if (aminoAcid not in self.unsolvedSequence):
+            self.unsolvedSequence.append(aminoAcid)
+        print("interaction bad")
+
+        return False 
+    
+    def satisfiedInteraction(self,aminoAcid, other):
+        aminoAcid.associates.add(other)
+        other.associates.add(aminoAcid)
+        aminoAcid.satisfied = True
+        if (aminoAcid in self.unsolvedSequence):
+            self.unsolvedSequence.remove(aminoAcid)
+        print("interaction gud")
+        return True
+    
+    def unsatisfiedLocation(self,aminoAcid):
+        aminoAcid.satisfied = False
+        if (aminoAcid not in self.unsolvedSequence):
+            self.unsolvedSequence.append(aminoAcid)
+        print("location bad")
+        return False 
+    
+    def satisfiedLocation(self,aminoAcid):
+        aminoAcid.satisfied = True
+        if (aminoAcid in self.unsolvedSequence):
+            self.unsolvedSequence.remove(aminoAcid)
+        print("location gud")
+        return True
+
     def checkAssociates(self,aminoAcid):
         otherAminoAcids = copy.copy(self.getGameSequence())
         otherAminoAcids.remove(aminoAcid)
         sidechain = aminoAcid.sidechain
         threshold = (self.gameScreenWidth/7)
-        for other in otherAminoAcids:
-            distance = abs(other.x-aminoAcid.particle.x)
-            if (distance < threshold*1.5):
-                if((other.sidechain.hbond and sidechain.hbond) or \
-                    (other.sidechain.sulfide and sidechain.sulfide) or \
-                        abs(sidechain.charge-other.sidechain.charge)==1):
-                        aminoAcid.associates.append(other)
-                        other.associates.append(aminoAcid)
                     
 
         for associate in aminoAcid.associates:     

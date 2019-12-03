@@ -1,3 +1,6 @@
+Important note:
+Since checkLegal returning False makes the program undo the last move, it should NOT update associates or satisfaction, just return False
+
 Issues:
 
 Graphics text glitching out when objects moved 

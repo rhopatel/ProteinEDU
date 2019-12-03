@@ -10,17 +10,28 @@ Amino acid chemical picture glitching out ✓
 Build list:
 
 
-1) fix h-bond and disulfide bridge drawing
-  - h bonds are not drawn, also consult textbook
+1) fix h-bond, electrostatic, and disulfide bridge drawing
+  - h bonds and electrostatic are not drawn, also consult textbook
+	- draw dotted lines
+1a) fix the "no attribute" error
 
-2) Build a working UI that incorporates the current command line help
-  - help screen
+2) Build a working UI that incorporates the current command line help (converting all print statements to into the interface)
+  - help screen (possibly with images from textbook)
   - info screen
   - formatted everything properly
 
-3) Fix all graphical glitches
+3) Autosolve feature
+ - design and implement
+
+4) Fix all graphical glitches
   - text and lines glitching
   
-  
+
+
+Limitations (for simplicities' sake):
+
+Only primary structure (in 2D) is shown
+Interactions between real and partial charges (dipole-ion) are not taken into account
+Interactions between sidechains and backbones are ignored
 
 

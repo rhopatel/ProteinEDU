@@ -65,7 +65,7 @@ class Particle(object):
 
 
 #FunctionalGroup superclass (will contain applicable method)
-class FunctionalGroup(object): #TODO: Update to be more biologically significant
+class FunctionalGroup(object): 
     def __init__(self,charge,sulfide,hbond,polar):
         self.charge = charge
         self.sulfide = sulfide
@@ -271,7 +271,7 @@ class ValineSideChain(FunctionalGroup):
 class FASTA(object):
     def __init__(self, path):
         self.path = path
-        self.aminoacidsequence = []
+        self.aminoacidsequence = set()
         self.title = None
         self.codonDict = self.makeCodonDict()
         sequence = self.FASTAtranslate(path)
@@ -310,12 +310,17 @@ class FASTA(object):
 
     def translate(self,rnaSequence):
         aminoacidsequence = []
-        for i in range(0,len(rnaSequence),3):
+        end = len(rnaSequence)
+        i = 0
+        while (i<=end):
             codon = rnaSequence[i:i+3]
+
             if (codon == "stop" or len(codon)!=3):
-                break
+                pass
+            
             else:
                 aminoacidsequence.append(copy.copy(self.codonDict[codon]))
+            i+=3
         return aminoacidsequence
 
     def bond(self):
@@ -374,7 +379,7 @@ class Game(object):
         self.red = (255,0,0)
         self.blue = (0,0,255)
         self.yellow = (255,255,0)
-        
+        self.purple = (255,0,255)
         #initialize heights/widths based on window size
         self.screenSize,self.screenSize2=pygame.display.get_surface().get_size()
         self.loadBarHeight = self.screenSize*(0.10)
@@ -437,6 +442,8 @@ class Game(object):
             sequence = self.gameFASTA.getSequence()
             start = random.randint(0,len(sequence)-6) #takes a fragment
             self.gameSequence = sequence[start:start+5]
+            while("stop" in self.gameSequence):
+                self.gameSequence = sequence[start:start+5]
             self.fileLoaded=True
             self.unsolvedSequence = copy.copy(self.gameSequence)
         else:
@@ -480,7 +487,7 @@ class Game(object):
         #self.screen.blit(self.helpText,self.gameScreen)
     
     def checkLegal(self,aminoAcid):
-        print("unsolved:", end="") 
+        print("unsolved:", end="")  #add to the real UI
         print(self.unsolvedSequence)
         otherAminoAcids = copy.copy(self.getGameSequence())
         otherAminoAcids.remove(aminoAcid)
@@ -506,11 +513,7 @@ class Game(object):
                     if(distance > threshold/2):
                         print("sulfide containing amino acids should be near other sulfide containing amino acids")
                         return False
-                    else:
-                        print("yeet")
-                        aminoAcid.associates.append(other)
-                    print("huh")
-            
+                    
 
         elif (not sidechain.polar):
             if (abs(aminoAcid.particle.x-centerX)>threshold or \
@@ -533,6 +536,10 @@ class Game(object):
                     else:
                         #possibly animate
                         pass
+                elif (otherAminoAcid.sidechain.charge==1):
+                    if (distance < threshold*1.5):
+                        print("positive charged amino acid cannot be near other positive charges")
+                        return False 
      
         elif(sidechain.charge==-1):
             for otherAminoAcid in otherAminoAcids:
@@ -544,22 +551,36 @@ class Game(object):
                     else:
                         #possibly animate
                         pass
-
-
-        elif (sidechain.hbond):
-            if(sum(other.hbond==True for other in otherAminoAcids)>0):
-                distance = abs(other.x-aminoAcid.particle.x)
-                if(distance < 75):
-                    print("hbonding amino acids should be near other hbonding amino acids")
-                    return False
-                else:
-                    aminoAcid.associates.append(other)
     
+                
             
         if (not aminoAcid.satisfied and self.unsolvedSequence):
             self.unsolvedSequence.remove(aminoAcid)
             aminoAcid.satisfied = True
         return True
+    def checkAssociates(self,aminoAcid):
+        otherAminoAcids = copy.copy(self.getGameSequence())
+        otherAminoAcids.remove(aminoAcid)
+        sidechain = aminoAcid.sidechain
+        threshold = (self.gameScreenWidth/7)
+        for other in otherAminoAcids:
+            distance = abs(other.x-aminoAcid.particle.x)
+            if (distance < threshold*1.5):
+                if((other.sidechain.hbond and sidechain.hbond) or \
+                    (other.sidechain.sulfide and sidechain.sulfide) or \
+                        abs(sidechain.charge-other.sidechain.charge)==1):
+                        aminoAcid.associates.append(other)
+                        other.associates.append(aminoAcid)
+                    
+
+        for associate in aminoAcid.associates:     
+            distance = abs(associate.x-aminoAcid.particle.x)
+            if(distance > threshold/3):
+                print("interaction broken")
+                #aminoAcid.satisfied = False
+                self.unsolvedSequence.append(aminoAcid)
+                aminoAcid.associates.remove(associate)
+                associate.associates.remove(aminoAcid)
 
     def checkForWin(self):
         for aminoAcid in self.gameSequence:
@@ -609,16 +630,19 @@ class Game(object):
                 prevY = aminoAcid.particle.y
                 aminoAcid.draw(self)
                 #print(aminoAcid.associates)
-                for associate in aminoAcid.associates:
-                    print("yay")
+                for associate in aminoAcid.associates: #draw interactions
                     if (aminoAcid.sidechain.sulfide and associate.sidechain.sulfide):
                         pygame.draw.line(self.screen,self.yellow,(associate.particle.x,associate.particle.y),
                                                 (aminoAcid.particle.x,
                                                 aminoAcid.particle.y),10)
                     elif (aminoAcid.sidechain.hbond and associate.sidechain.hbond):
-                        pygame.draw.line(self.screen,self.blue,(associate.x,associate.y),
+                        pygame.draw.line(self.screen,self.blue,(associate.particle.x,associate.particle.y),
                                                 (aminoAcid.particle.x,
                                                 aminoAcid.particle.y),10)
+                    elif (abs(sidechain.charge-other.sidechain.charge)==1):
+                        pygame.draw.line(self.screen,self.purple,(associate.particle.x,associate.particle.y),
+                                                (aminoAcid.particle.x,
+                                                aminoAcid.particle.y),10)                            
 
             pygame.display.update()
     
@@ -639,7 +663,7 @@ class Game(object):
         
 def main():
     game = Game(10)
-    game.FASTAtest("assets/data/lab.fasta")
+    #game.FASTAtest("assets/data/lab.fasta")
 
     while not game.done:
         pygame.time.delay(game.delay)
@@ -703,7 +727,6 @@ def main():
 
             elif (event.type == pygame.MOUSEBUTTONUP):
                 mouseX, mouseY = pygame.mouse.get_pos()
-                print(mouseX,mouseY)
                 if (game.fileLoaded):
                     for aminoAcid in game.getGameSequence():
                         if (aminoAcid.particle.clicked):                      
@@ -712,7 +735,7 @@ def main():
                                 and mouseX<game.gameScreenWidth and mouseY < game.gameScreenHeight):
                                 aminoAcid.x = aminoAcid.particle.x
                                 aminoAcid.y = aminoAcid.particle.y
-                               
+                                game.checkAssociates(aminoAcid)
                                 if(game.checkForWin()):
                                     game.gameOver()
                             else:
@@ -756,7 +779,7 @@ def main():
                                 aminoAcid.particle.y = mouseY
                     if (brokenLink!=None):
                         #tell the user what they did
-                        game.undoMove(brokenLink,iterations=10)
+                        game.undoMove(brokenLink,iterations=7)
                         brokenLink=None
                        
         pygame.display.update()

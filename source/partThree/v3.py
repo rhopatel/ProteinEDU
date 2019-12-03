@@ -568,10 +568,10 @@ class Game(object):
         print("SOLVED!!!")
         return True
 
-    def undoMove(self,aminoAcid,iterations=10,dx=None,dy=None):
-        if (dx == None or dy ==None):
-            dx = (aminoAcid.particle.x - aminoAcid.x) / 10
-            dy = (aminoAcid.particle.y - aminoAcid.y) / 10
+    def undoMove(self,aminoAcid,iterations=10):
+        
+        dx = (aminoAcid.particle.x - aminoAcid.x) / 10
+        dy = (aminoAcid.particle.y - aminoAcid.y) / 10
 
         for i in range(iterations):
             pygame.draw.circle(self.screen,self.white,(int(aminoAcid.particle.x),int(aminoAcid.particle.y)),aminoAcid.r)
@@ -615,7 +615,7 @@ class Game(object):
                         pygame.draw.line(self.screen,self.yellow,(associate.x,associate.y),
                                                 (aminoAcid.particle.x,
                                                 aminoAcid.particle.y),10)
-                    elif (aminoAcid.hbond and associate.bond):
+                    elif (aminoAcid.sidechain.hbond and associate.sidechain.hbond):
                         pygame.draw.line(self.screen,self.blue,(associate.x,associate.y),
                                                 (aminoAcid.particle.x,
                                                 aminoAcid.particle.y),10)
@@ -697,19 +697,26 @@ def main():
 
                             aminoAcid.particle.clicked=True
                             game.displayInformation(aminoAcid)
+                            
                 else:
                     game.resetSelection()
 
             elif (event.type == pygame.MOUSEBUTTONUP):
+                mouseX, mouseY = pygame.mouse.get_pos()
+                print(mouseX,mouseY)
                 if (game.fileLoaded):
                     for aminoAcid in game.getGameSequence():
-                        if (aminoAcid.particle.clicked):
-                            if(game.checkLegal(aminoAcid)):
+                        if (aminoAcid.particle.clicked):                      
+                            if(game.checkLegal(aminoAcid) \
+                                and mouseX>0 and mouseY>game.loadBarHeight \
+                                and mouseX<game.gameScreenWidth and mouseY < game.gameScreenHeight):
                                 aminoAcid.x = aminoAcid.particle.x
                                 aminoAcid.y = aminoAcid.particle.y
+                               
                                 if(game.checkForWin()):
                                     game.gameOver()
                             else:
+                               
                                 game.undoMove(aminoAcid)
     
                             aminoAcid.particle.clicked=False
@@ -740,15 +747,17 @@ def main():
 
                             distance = math.sqrt(sqx+sqy)
                             if (distance>game.bondLength):
+                                
                                 aminoAcid.particle.clicked=False
                                 brokenLink=aminoAcid
-                                break
+                            else:
                                 
-                            
-                            aminoAcid.particle.x = mouseX
-                            aminoAcid.particle.y = mouseY
+                                aminoAcid.particle.x = mouseX
+                                aminoAcid.particle.y = mouseY
                     if (brokenLink!=None):
-                        game.undoMove(brokenLink,iterations=2)
+                        #tell the user what they did
+                        game.undoMove(brokenLink,iterations=10)
+                        brokenLink=None
                        
         pygame.display.update()
     pygame.quit()

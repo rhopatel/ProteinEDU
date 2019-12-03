@@ -511,8 +511,8 @@ class Game(object):
                 if(other.sidechain.sulfide):
                     distance = abs(other.x-aminoAcid.particle.x)
                     if(distance > threshold/2):
-                        print("sulfide containing amino acids should be near other sulfide containing amino acids")
-                        return self.unsatisfiedInteraction(aminoAcid, other)
+                        print("sulfide containing amino acids should be near other sulfide containing amino 
+                        return False
                     else:
                         return self.satisfiedInteraction(aminoAcid, other)
 
@@ -522,7 +522,7 @@ class Game(object):
                     distance = abs(other.x-aminoAcid.particle.x)
                     if(distance > threshold/2):
                         print("hbonding amino acids should be near other hbonding amino acids")
-                        return self.unsatisfiedInteraction(aminoAcid, other)
+                        return False
                     else:
                         return self.satisfiedInteraction(aminoAcid, other)
 
@@ -530,17 +530,15 @@ class Game(object):
         elif (not sidechain.polar):
             if (abs(aminoAcid.particle.x-centerX)>threshold or \
                 abs(aminoAcid.particle.y-centerY)>threshold):
-                print("nonpolar amino acid should be near the center")
-                return self.unsatisfiedLocation(aminoAcid)
+                print("nonpolar amino acid should be near the 
             else:
                 return self.satisfiedLocation(aminoAcid)
 
         elif (sidechain.polar or sidechain.charge!=0):
             if (abs(aminoAcid.particle.x-centerX)<threshold/4 or \
                 abs(aminoAcid.particle.y-centerY)<threshold/4):
-                print("polar or charged amino acid should be near the edges")
-                aminoAcid.satisfied = False
-                return self.unsatisfiedLocation(aminoAcid)
+                print("polar or charged amino acid should be near 
+                return False
             else:
                 return self.satisfiedLocation(aminoAcid)
 
@@ -550,7 +548,7 @@ class Game(object):
                 if (other.sidechain.charge==-1):
                     if (distance < threshold*1.5):
                         print("positive charged amino acid cannot be near other positive charges")
-                        return self.unsatisfiedInteraction(aminoAcid,other)
+                        return False
                     else:
                         #possibly animate
                         pass
@@ -564,7 +562,7 @@ class Game(object):
                 if (other.sidechain.charge==1):
                     if (distance < threshold*1.5):
                         print("negative charged amino acid cannot be near other negative charges")
-                        return self.unsatisfiedInteraction(aminoAcid,other)
+                        return False
                     else:
                         #possibly animate
                         pass

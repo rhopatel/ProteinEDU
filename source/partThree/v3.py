@@ -612,7 +612,7 @@ class Game(object):
                 for associate in aminoAcid.associates:
                     print("yay")
                     if (aminoAcid.sidechain.sulfide and associate.sidechain.sulfide):
-                        pygame.draw.line(self.screen,self.yellow,(associate.x,associate.y),
+                        pygame.draw.line(self.screen,self.yellow,(associate.particle.x,associate.particle.y),
                                                 (aminoAcid.particle.x,
                                                 aminoAcid.particle.y),10)
                     elif (aminoAcid.sidechain.hbond and associate.sidechain.hbond):

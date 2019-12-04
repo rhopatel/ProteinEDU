@@ -358,6 +358,154 @@ class FASTA(object):
     def __repr__(self):
         return str(self.getSequence())
 
+#autosolver
+
+# from http://www.cs.cmu.edu/~112/notes/notes-recursion-part2.html#genericBacktrackingSolver
+##############################################
+# Generic backtracking-based puzzle solver
+#
+# Subclass this class to solve your puzzle
+# using backtracking.
+#
+# To see how useful backtracking is, run with checkConstraints=True
+# and again with checkConstraints=False
+# You will see the number of total states go up (probably by a lot).
+##############################################
+
+class BacktrackingPuzzleSolver(object):
+    def solve(self):
+        self.moves = [ ]
+        self.states = set()
+        # If checkConstraints is False, then do not check the backtracking
+        # constraints as we go (so instead do an exhaustive search)
+
+        # Be sure to set self.startArgs and self.startState in __init__
+        print("got here")
+        self.solutionState = self.solveFromState(self.startState)
+
+        return (self.moves, self.solutionState)
+
+    def solveFromState(self, state):
+        if state in self.states:
+            # we have already seen this state, so skip it
+            return None
+        self.states.add(state)
+        if self.isSolutionState(state):
+            # we found a solution, so return it!
+            return state
+        else:
+            for move in self.getLegalMoves(state):
+                # 1. Apply the move
+                childState = self.doMove(state, move)
+                # 2. Verify the move satisfies the backtracking constraints
+                #    (only proceed if so)
+                if ((self.stateSatisfiesConstraints(childState))):
+                    # 3. Add the move to our solution path (self.moves)
+                    self.moves.append(move)
+                    # 4. Try to recursively solve from this new state
+                    result = self.solveFromState(childState)
+                    # 5. If we solved it, then return the solution!
+                    if result != None:
+                        return result
+                    # 6. Else we did not solve it, so backtrack and
+                    #    remove the move from the solution path (self.moves)
+                    self.moves.pop()
+            return None
+
+    # You have to implement these:
+
+    def __init__(self):
+        # Be sure to set self.startArgs and self.startState here
+        pass
+
+    def stateSatisfiesConstraints(self, state):
+        # return True if the state satisfies the solution constraints so far
+        raise NotImplementedError
+
+    def isSolutionState(self, state):
+        # return True if the state is a solution
+        raise NotImplementedError
+
+    def getLegalMoves(self, state):
+        # return a list of the legal moves from this state (but not
+        # taking the solution constraints into account)
+        raise NotImplementedError
+
+    def doMove(self, state, move):
+        # return a new state that results from applying the given
+        # move to the given state
+        raise NotImplementedError
+
+##############################################
+# Generic State Class
+#
+# Subclass this with the state required by your problem.
+# Note that this is a bit hacky with __eq__, __hash__, and __repr__
+# (it's fine for 112, but after 112, you should take the time to
+# write better class-specific versions of these)
+##############################################
+
+class State(object):
+    def __eq__(self, other): return (other != None) and self.__dict__ == other.__dict__
+    def __hash__(self): return hash(str(self.__dict__)) # hack but works even with lists
+    def __repr__(self): return str(self.__dict__)
+
+
+class ProteinState(State):
+    def __init__(self, unplaced, placed):
+        self.placed = placed
+        self.unplaced = unplaced
+
+
+    def __repr__(self):
+        return "Placed: "+str(self.placed)+", Unplaced: "+str(self.unplaced)
+ 
+
+class ProteinSolver(BacktrackingPuzzleSolver):
+    def __init__(self, game):
+        self.game = game
+        self.L = self.game.getGameSequence()
+        self.L[0].x = game.gameScreenWidth//2
+        self.L[0].y = game.gameScreenHeight//2
+        self.startState = ProteinState(self.L[1:],[self.L[0]])
+
+
+    def stateSatisfiesConstraints(self, state):
+        lastPlaced = state.placed[len(state.placed)-1]
+        otherPlaced = copy.copy(state.placed)
+        otherPlaced.remove(lastPlaced)
+        return self.game.checkLegal(lastPlaced,otherPlaced)
+
+    def isSolutionState(self, state):
+        if (state.placed and (not state.unplaced)):
+
+            for aminoAcid in state.placed:
+                if (not aminoAcid.satisfied):
+                    return False
+            return True
+        return False
+  
+    def getLegalMoves(self, state):
+        legalMoves = []
+        for dx in range(-3,3):
+            for dy in range(-3,3):
+                if (not (dx==0 and dy==0)):
+                    legalMoves.append((dx,dy))
+        #continue work here
+        return legalMoves
+
+
+    def doMove(self, state, move):
+        newAminoAcid = state.unplaced[0]
+        dx,dy = move
+        newAminoAcid.x += (dx*newAminoAcid.r)
+        newAminoAcid.y += (dy*newAminoAcid.r)
+        placed = state.placed.append(newAminoAcid)
+        unplaced = copy.copy(state.placed)
+        newState = ProteinState(placed,unplaced)
+        return newState
+
+
 class Game(object):
     def __init__(self,delay):
         self.gameFASTA = None
@@ -532,10 +680,10 @@ class Game(object):
     
 
     
-    def checkLegal(self,aminoAcid,otherAminoAcids):
+    def checkLegal(self,aminoAcid,otherAminoAcids=None):
         print("unsolved:", end="")  #add to the real UI
         print(self.unsolvedSequence)
-        if (otherAminoAcids=None)
+        if (otherAminoAcids==None):
             otherAminoAcids = copy.copy(self.getGameSequence())
             otherAminoAcids.remove(aminoAcid)
         totalX = 0
@@ -766,8 +914,6 @@ def main():
         game.screen.blit(game.solveText,game.solveButton)
        
         game.drawSequence()
-        
-        
 
         for event in pygame.event.get():
             if (event.type == pygame.QUIT):
@@ -779,6 +925,7 @@ def main():
                 if (game.loadButton.collidepoint(mousePos) and left):
                     game.loadFASTA()
                     game.initializeGameScreen()
+                    game.fileLoaded = True
                 elif (game.clearButton.collidepoint(mousePos) and left):
                     game.gameSequence = None
                     game.gameFASTA = None
@@ -788,8 +935,10 @@ def main():
                     help(game)
 
                 elif (game.solveButton.collidepoint(mousePos) and left):
-                    solve(game)
                     print("solving....")
+                    if (game.fileLoaded):
+                        solve(game)
+                    
                 elif(game.screen.get_at(mousePos)!=game.white \
                     and mouseX<game.gameScreenWidth \
                     and mouseY>game.loadBarHeight \
@@ -920,148 +1069,10 @@ def help(game):
         pygame.display.update() 
 
 def solve(game):
-    solver =ProteinSolver(game)
+    solver = ProteinSolver(game)
+    solver.solve()
 
 
 if __name__ == '__main__':
     main()
-
-#autosolver
-
-
-# from http://www.cs.cmu.edu/~112/notes/notes-recursion-part2.html#genericBacktrackingSolver
-##############################################
-# Generic backtracking-based puzzle solver
-#
-# Subclass this class to solve your puzzle
-# using backtracking.
-#
-# To see how useful backtracking is, run with checkConstraints=True
-# and again with checkConstraints=False
-# You will see the number of total states go up (probably by a lot).
-##############################################
-
-class BacktrackingPuzzleSolver(object):
-    def solve(self):
-        self.moves = [ ]
-        self.states = set()
-        # If checkConstraints is False, then do not check the backtracking
-        # constraints as we go (so instead do an exhaustive search)
-
-        # Be sure to set self.startArgs and self.startState in __init__
-        self.solutionState = self.solveFromState(self.startState)
-
-        return (self.moves, self.solutionState)
-
-    def solveFromState(self, state):
-        if state in self.states:
-            # we have already seen this state, so skip it
-            return None
-        self.states.add(state)
-        if self.isSolutionState(state):
-            # we found a solution, so return it!
-            return state
-        else:
-            for move in self.getLegalMoves(state):
-                # 1. Apply the move
-                childState = self.doMove(state, move)
-                # 2. Verify the move satisfies the backtracking constraints
-                #    (only proceed if so)
-                if ((self.stateSatisfiesConstraints(childState))):
-                    # 3. Add the move to our solution path (self.moves)
-                    self.moves.append(move)
-                    # 4. Try to recursively solve from this new state
-                    result = self.solveFromState(childState)
-                    # 5. If we solved it, then return the solution!
-                    if result != None:
-                        return result
-                    # 6. Else we did not solve it, so backtrack and
-                    #    remove the move from the solution path (self.moves)
-                    self.moves.pop()
-            return None
-
-    # You have to implement these:
-
-    def __init__(self):
-        # Be sure to set self.startArgs and self.startState here
-        pass
-
-    def stateSatisfiesConstraints(self, state):
-        # return True if the state satisfies the solution constraints so far
-        raise NotImplementedError
-
-    def isSolutionState(self, state):
-        # return True if the state is a solution
-        raise NotImplementedError
-
-    def getLegalMoves(self, state):
-        # return a list of the legal moves from this state (but not
-        # taking the solution constraints into account)
-        raise NotImplementedError
-
-    def doMove(self, state, move):
-        # return a new state that results from applying the given
-        # move to the given state
-        raise NotImplementedError
-
-##############################################
-# Generic State Class
-#
-# Subclass this with the state required by your problem.
-# Note that this is a bit hacky with __eq__, __hash__, and __repr__
-# (it's fine for 112, but after 112, you should take the time to
-# write better class-specific versions of these)
-##############################################
-
-class State(object):
-    def __eq__(self, other): return (other != None) and self.__dict__ == other.__dict__
-    def __hash__(self): return hash(str(self.__dict__)) # hack but works even with lists
-    def __repr__(self): return str(self.__dict__)
-
-
-class ProteinState(State):
-    def __init__(self, unplaced, placed):
-        self.placed = placed
-        self.unplaced = unplaced
-
-    def __repr__(self):
-        return "Placed: "+str(self.placed)+", Unplaced: "+str(self.unplaced)
- 
-
-class ProteinSolver(BacktrackingPuzzleSolver):
-    def __init__(self, game):
-        self.L = game.getGameSequence()
-        self.L[0].x = game.gameScreenWidth//2
-        self.L[0].y = game.gameScreenHeight//2
-        self.startState = ProteinState(L[1:],L[0])
-
-
-    def stateSatisfiesConstraints(self, state):
-        lastPlaced = state.placed[len(state.placed)-1]
-        otherPlaced = copy.copy(state.placed)
-        otherPlaced.remove(lastPlaced)
-        return checkLegal(lastPlaced,otherPlaced)
-
-    def isSolutionState(self, state):
-        if (state.placed and (not state.unplaced)):
-            for aminoAcid in state.placed:
-                if (not aminoAcid.satisfied):
-                    return False
-            return True
-        return False
-  
-    def getLegalMoves(self, state):
-        legalMoves = []
-        for dx in range(0,3):
-            for dy in range(0,3):
-                if (not (dx==0 and dy==0)):
-        
-        return legalMoves
-
-
-    def doMove(self, state, move):
-        newAminoAcid = state.unplaced[0]
-        placed = state.placed + newAminoAcid
-        unplaced = copy.copy(state.placed)
-        newState = ProteinState(placed,unplaced)
 

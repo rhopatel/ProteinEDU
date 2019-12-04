@@ -380,7 +380,6 @@ class BacktrackingPuzzleSolver(object):
         # constraints as we go (so instead do an exhaustive search)
 
         # Be sure to set self.startArgs and self.startState in __init__
-        print("got here")
         self.solutionState = self.solveFromState(self.startState)
 
         return (self.moves, self.solutionState)
@@ -465,8 +464,13 @@ class ProteinSolver(BacktrackingPuzzleSolver):
     def __init__(self, game):
         self.game = game
         self.L = self.game.getGameSequence()
+        """   for aminoAcid in self.L:
+            aminoAcid.x = None
+            aminoAcid.y = None"""
         self.L[0].x = game.gameScreenWidth//2
         self.L[0].y = game.gameScreenHeight//2
+        #self.startX = self.L[0].x
+        #self.startY = self.L[0].y
         self.startState = ProteinState(self.L[1:],[self.L[0]])
 
 
@@ -478,7 +482,6 @@ class ProteinSolver(BacktrackingPuzzleSolver):
 
     def isSolutionState(self, state):
         if (state.placed and (not state.unplaced)):
-
             for aminoAcid in state.placed:
                 if (not aminoAcid.satisfied):
                     return False
@@ -486,9 +489,11 @@ class ProteinSolver(BacktrackingPuzzleSolver):
         return False
   
     def getLegalMoves(self, state):
+        if (not state.unplaced):
+            return []
         legalMoves = []
-        for dx in range(-3,3):
-            for dy in range(-3,3):
+        for dx in range(-4,4):
+            for dy in range(-4,4):
                 if (not (dx==0 and dy==0)):
                     legalMoves.append((dx,dy))
         #continue work here
@@ -498,11 +503,15 @@ class ProteinSolver(BacktrackingPuzzleSolver):
     def doMove(self, state, move):
         newAminoAcid = state.unplaced[0]
         dx,dy = move
-        newAminoAcid.x += (dx*newAminoAcid.r)
-        newAminoAcid.y += (dy*newAminoAcid.r)
+        lastPlaced = state.placed[len(state.placed)-1]
+        print(lastPlaced)
+        newAminoAcid.particle.x = lastPlaced.x + (dx*(self.game.bondLength/5))
+        newAminoAcid.particle.y = lastPlaced.y + (dy*(self.game.bondLength/5))
         placed = state.placed.append(newAminoAcid)
         unplaced = copy.copy(state.placed)
         newState = ProteinState(placed,unplaced)
+        self.game.drawSequence()
+        pygame.display.update()
         return newState
 
 
@@ -711,7 +720,7 @@ class Game(object):
                   
                     else:
                         return self.satisfiedInteraction(aminoAcid, other)
-        
+
         if(sidechain.charge==1):
             for other in otherAminoAcids:
                 distance = abs(otherAminoAcid.x-aminoAcid.particle.x)
@@ -724,12 +733,15 @@ class Game(object):
                         pass
                 elif (other.sidechain.charge==1):
                     if (distance < threshold*1.5):
+                  
                         return self.satisfiedInteraction(aminoAcid, other)
      
         if(sidechain.charge==-1):
+        
             for other in otherAminoAcids:
+             
                 distance = abs(other.x-aminoAcid.particle.x)
-                if (other.sidechain.charge==1):
+                if (other.sidechain.charge==-1):
                     if (distance < threshold*1.5):
                         print("negative charged amino acid cannot be near other negative charges")
                   
@@ -738,6 +750,7 @@ class Game(object):
                         pass
                 elif (other.sidechain.charge==1):
                     if (distance < threshold*1.5):
+           
                         return self.satisfiedInteraction(aminoAcid, other)
     
 
@@ -773,6 +786,7 @@ class Game(object):
 
     
     def satisfiedInteraction(self,aminoAcid, other):
+
         aminoAcid.associates.add(other)
         other.associates.add(aminoAcid)
         aminoAcid.satisfied = True
@@ -864,7 +878,7 @@ class Game(object):
                         pygame.draw.line(self.screen,self.blue,(associate.particle.x,associate.particle.y),
                                                 (aminoAcid.particle.x,
                                                 aminoAcid.particle.y),10)
-                    elif (abs(aminoAcid.sidechain.charge - other.sidechain.charge)==1):
+                    elif ((abs(aminoAcid.sidechain.charge) - abs(associate.sidechain.charge))==0):
                         pygame.draw.line(self.screen,self.purple,(associate.particle.x,associate.particle.y),
                                                 (aminoAcid.particle.x,
                                                 aminoAcid.particle.y),10)                            
@@ -953,7 +967,7 @@ def main():
                             aminoAcid.particle.clicked=True
                             game.displayInformation(aminoAcid)
                         else:
-                            print("bond overextended")
+                            pass
                             
                 else:
                     game.resetSelection()

@@ -366,13 +366,15 @@ class Game(object):
 
         self.delay = delay
         self.done = False
+        
+        os.environ['SDL_VIDEO_WINDOW_POS'] = "15,40"
 
         pygame.init()
         self.root = tkinter.Tk()
         self.width = self.root.winfo_screenwidth()
         self.height = self.root.winfo_screenheight()
-        self.screen = pygame.display.set_mode((self.width,self.height),pygame.RESIZABLE)
-        #do not move the window please
+        self.screen = pygame.display.set_mode((int(self.width*0.9),int(self.height*0.9)),pygame.RESIZABLE)
+        
         self.screen.fill((255,255,255))
         pygame.display.set_caption("ProteinEDU")
 
@@ -393,6 +395,34 @@ class Game(object):
         #initialize heights/widths based on window size
 
         self.titleText = self.titlefont.render("ProteinEDU",True,self.purple)
+
+        #help screen
+        self.helpTitleText = self.titlefont.render("HELP SCREEN",True,self.blue)
+        self.objectiveText = self.gamefont.render("Objective: Solve the puzzle by moving each amino acid into a satisfactory conformation.",True,self.black)
+        self.explanationText = self.gamefont.render("Each amino acid on the screen must be EITHER in a satisfactory location OR interact with another amino acid.",True,self.black)
+        self.categoriesText = self.gamefont.render("The 20 basic amino acids have been separated into five types.",True,self.black)
+        self.nonpolarGreen = self.gamefont.render("GREEN- nonpolar amino acids",True,self.green)
+        self.nonpolarYellow = self.gamefont.render("YELLOW- nonpolar amino acids, contains a sulfide",True,self.yellow)
+        self.chargedRed = self.gamefont.render("RED - positive charged amino acids",True,self.red)
+        self.chargedBlue = self.gamefont.render("BLUE - negatively charged amino acids",True,self.blue)
+        self.polarPurple = self.gamefont.render("PURPLE - polar amino acids",True,self.purple)
+
+        self.locationRules = self.gamefont.render("To satisfy via location, follow the below rules.", True, self.black)
+        self.nonpolarRules = self.gamefont.render("nonpolars prefer to be near the center of the protein due to hydrophobic interaction with water.",True,self.black)
+        self.polarLocationRules = self.gamefont.render("polars prefer to be away from the center of the protein due to hydrophilic interaction with water",True,self.black)
+        self.chargedLocationRules = self.gamefont.render("positive/negatively charged amino acids are also hydrophilic, but additionally must not be next to an like charge.",True,self.black)
+
+        self.interactionRules = self.gamefont.render("To satisfy via interaction (satisfies both amino acids), follow the below rules.", True, self.black)
+        self.disulfideBridgeRules = self.gamefont.render("Sulfide containing amino acids can form disulfide bridges.", True, self.black)
+        self.electrostaticRules = self.gamefont.render("Charged amino acids can experience electrostatic attraction with an opposite charge.", True, self.black)
+        self.hbondingRules = self.gamefont.render("All polar and charged amino acids can hydrogen bond with each other.", True, self.black)
+
+        self.forMoreInfoText = self.gamefont.render("For more information about amino acid biochemistry, and to see the limitations that ProteinEDU takes, consult:", True,self.black)
+        helpString = """
+       
+    
+        The amino acids that have not yet reached their optimal conformation are listed in the console, along with feedback. 
+        Load an example file, then click and drag each amino acid to move it. Keep in mind that the peptide bonds are of a fixed length."""
         
 
         #game runtime screen
@@ -449,10 +479,10 @@ class Game(object):
         self.gameOverText = self.gamefont.render("GAMEOVER",True,self.white)
 
 
-
-
     def loadFASTA(self): 
-        fileName = filedialog.askopenfilename() #prompts user to specify file
+        dataDir="assets/data"
+        self.root.focus_force()
+        fileName = filedialog.askopenfilename(initialdir=dataDir,parent=self.root) #prompts user to specify file
 
         if ("fasta" in fileName.lower()):
             self.gameFASTA = FASTA(fileName)
@@ -489,18 +519,7 @@ class Game(object):
                                             aminoAcid.y,aminoAcid.r)
             currentX+=dx
     
-    def helpScreen(self):
-        helpString = """NOTE: At the moment, the help function is still under development. Until eventually incorporated into the user interface, this feature will remain inthe print console. 
-        Objective: Solve the puzzle by moving each amino acid into a satisfactory conformation.
-        GREEN- nonpolar amino acids, prefer to be near the center of the protein due to hydrophobic interaction with water
-        RED/BLUE - positive/negatively charged amino acids, prefer to be far from like charges
-        PURPLE - polar amino acids, prefer to be away from the center of the protein due to hydrophilic interaction with water
-        YELLOW - special case containing a sulfur atom, prefers to be near others with sulfur (if exists). Also nonpolar.
 
-        The amino acids that have not yet reached their optimal conformation are listed in the console, along with feedback. 
-        Load an example file, then click and drag each amino acid to move it. Keep in mind that the peptide bonds are of a fixed length."""
-        print(helpString)        
-        #self.screen.blit(self.helpText,self.gameScreen)
     
     def checkLegal(self,aminoAcid):
         print("unsolved:", end="")  #add to the real UI
@@ -602,14 +621,14 @@ class Game(object):
             self.unsolvedSequence.remove(aminoAcid)
         if (other in self.unsolvedSequence):
             self.unsolvedSequence.remove(other)
-        print("interaction good")
+
         return True
 
     def satisfiedLocation(self,aminoAcid):
         aminoAcid.satisfied = True
         if (aminoAcid in self.unsolvedSequence):
             self.unsolvedSequence.remove(aminoAcid)
-        print("location good")
+
         return True
     '''
     def checkAssociates(self,aminoAcid):
@@ -752,7 +771,7 @@ def main():
                     game.fileLoaded = False
       
                 elif (game.helpButton.collidepoint(mousePos) and left):
-                    game.helpScreen()
+                    help(game)
     
                 elif(game.screen.get_at(mousePos)!=game.white \
                     and mouseX<game.gameScreenWidth \
@@ -835,18 +854,42 @@ def main():
 def intro(game):
     introDone = False
     while (not introDone):
-        #print("yay")
+
         game.screen.fill((255,255,255))
         game.screen.blit(game.titleText,(game.screenSize/3,game.screenSize/6))
         for event in pygame.event.get():
             if (event.type == pygame.MOUSEBUTTONDOWN):
                 introDone=True
+                help(game)
             if (event.type == pygame.QUIT):
+                introDone=True
                 game.done = True
                 
         pygame.display.update() 
 
-            
+def help(game):
+    helpDone = False
+    while (not helpDone):
+
+        game.screen.fill((255,255,255))
+        game.screen.blit(game.helpTitleText,(game.screenSize/3,game.screenSize/20))
+        game.screen.blit(game.objectiveText,(game.screenSize/15,3*game.screenSize/25))
+        game.screen.blit(game.explanationText,(game.screenSize/15,4*game.screenSize/25))
+        game.screen.blit(game.categoriesText,(game.screenSize/15,5*game.screenSize/25))
+        game.screen.blit(game.nonpolarGreen,(game.screenSize/15,6*game.screenSize/25))
+        game.screen.blit(game.nonpolarYellow,(game.screenSize/15,7*game.screenSize/25))
+        game.screen.blit(game.chargedRed,(game.screenSize/15,8*game.screenSize/25))
+        game.screen.blit(game.chargedBlue,(game.screenSize/15,9*game.screenSize/25))
+        game.screen.blit(game.polarPurple,(game.screenSize/15,10*game.screenSize/25))
+      
+        for event in pygame.event.get():
+            if (event.type == pygame.MOUSEBUTTONDOWN):
+                helpDone=True
+            if (event.type == pygame.QUIT):
+                helpDone=True
+                game.done = True
+                
+        pygame.display.update() 
 
             
 

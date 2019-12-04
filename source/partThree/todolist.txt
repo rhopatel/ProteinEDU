@@ -31,6 +31,7 @@ Do list:
 
 5) Fix all graphical glitches
   - text and lines glitching
+   - tkinter window appears behind pygame
   
 6) Dashed lines
 
@@ -43,5 +44,6 @@ Interactions between real and partial charges (dipole-ion) are not taken into ac
 Interactions between sidechains and backbones are ignored
 Amino Acids are represented only as circles
 To determine amino acid "satisfaction", both location and interaction are considered (in other words, a polar AA has only to hbond OR be at the edge to be satisfied)
+
 
 

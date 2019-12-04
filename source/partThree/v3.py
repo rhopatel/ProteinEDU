@@ -472,13 +472,13 @@ class ProteinSolver(BacktrackingPuzzleSolver):
         #self.startX = self.L[0].x
         #self.startY = self.L[0].y
         placed = [self.L[0]]
-        print(placed)
+        #print(placed)
         unplaced = self.L[1:]
         self.startState = ProteinState(placed,unplaced)
 
 
     def stateSatisfiesConstraints(self, state):
-        print(len(state.placed))
+        #print(len(state.placed))
         lastPlaced = state.placed[len(state.placed)-1]
         otherPlaced = copy.copy(state.placed)
         otherPlaced.remove(lastPlaced)
@@ -514,7 +514,7 @@ class ProteinSolver(BacktrackingPuzzleSolver):
         newAminoAcid = state.unplaced[0]
         dx,dy = move
         lastPlaced = state.placed[len(state.placed)-1]
-        print(lastPlaced)
+        #print(lastPlaced)
         newAminoAcid.particle.x = lastPlaced.particle.x + (dx*(self.game.bondLength/6))
         newAminoAcid.particle.y = lastPlaced.particle.y + (dy*(self.game.bondLength/6))
         placed = copy.copy(state.placed)
@@ -522,7 +522,7 @@ class ProteinSolver(BacktrackingPuzzleSolver):
         unplaced = copy.copy(state.unplaced)
         unplaced.remove(newAminoAcid)
         newState = ProteinState(placed,unplaced)
-        print(newState)
+        #print(newState)
         self.game.drawSequence()
         pygame.display.update()
         return newState

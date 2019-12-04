@@ -498,8 +498,10 @@ class ProteinSolver(BacktrackingPuzzleSolver):
         if (not state.unplaced):
             return []
         legalMoves = []
-        for dx in range(-4,4):
-            for dy in range(-4,4):
+        rangeOfMotion = [0,-1,+1,-2,+2,-3,+3]
+        random.shuffle(rangeOfMotion)
+        for dx in rangeOfMotion:
+            for dy in rangeOfMotion:
                 newAminoAcid = state.unplaced[0]
                 lastPlaced = state.placed[len(state.placed)-1]
                 newX = lastPlaced.particle.x + (dx*(self.game.bondLength/6))
@@ -508,7 +510,7 @@ class ProteinSolver(BacktrackingPuzzleSolver):
                     and newX-newAminoAcid.r>0 \
                     and newY-newAminoAcid.r>self.game.loadBarHeight \
                     and newX-newAminoAcid.r<self.game.gameScreenWidth \
-                    and newY-newAminoAcid.r<self.game.height):
+                    and newY+newAminoAcid.r<self.game.gameScreenHeight/2):
                     legalMoves.append((dx,dy))
         #continue work here
         return legalMoves
@@ -518,7 +520,6 @@ class ProteinSolver(BacktrackingPuzzleSolver):
         newAminoAcid = state.unplaced[0]
         dx,dy = move
         lastPlaced = state.placed[len(state.placed)-1]
-        #print(lastPlaced)
         newAminoAcid.particle.x = lastPlaced.particle.x + (dx*(self.game.bondLength/6))
         newAminoAcid.particle.y = lastPlaced.particle.y + (dy*(self.game.bondLength/6))
         placed = copy.copy(state.placed)
@@ -526,7 +527,6 @@ class ProteinSolver(BacktrackingPuzzleSolver):
         unplaced = copy.copy(state.unplaced)
         unplaced.remove(newAminoAcid)
         newState = ProteinState(placed,unplaced)
-        #print(newState)
         self.game.drawSequence()
         pygame.display.update()
         return newState
@@ -536,11 +536,15 @@ class Game(object):
     def __init__(self,delay):
         self.gameFASTA = None
         self.gameSequence = None
+        self.solvedSequence = []
+        self.unsolvedSequence = []
         self.fileLoaded = False
 
         self.delay = delay
         self.done = False
         self.solutionDisplay = False
+        self.advice = "Click and drag the amino acids to move them."
+        self.issue = ""
         os.environ['SDL_VIDEO_WINDOW_POS'] = "15,40"
 
         pygame.init()
@@ -553,6 +557,7 @@ class Game(object):
         pygame.display.set_caption("ProteinEDU")
 
         #visual assets
+        self.smallfont = pygame.font.Font('freesansbold.ttf', 15)
         self.gamefont = pygame.font.Font('freesansbold.ttf', 20) 
         self.namefont = pygame.font.Font('freesansbold.ttf', 30) 
         self.titlefont = pygame.font.Font('freesansbold.ttf', 50) 
@@ -592,12 +597,12 @@ class Game(object):
         self.disulfideBridgeRules = self.gamefont.render("Sulfide containing amino acids can form disulfide bridges.", True, self.black)
         self.electrostaticRules = self.gamefont.render("Charged amino acids can experience electrostatic attraction with an opposite charge.", True, self.black)
         self.hbondingRules = self.gamefont.render("All polar and charged amino acids can hydrogen bond with each other.", True, self.black)
-
+        
         self.forMoreInfoText = self.gamefont.render("For more information about amino acid biochemistry, and to see the limitations that ProteinEDU takes, consult:", True,self.darkRed)
         helpString = """
        
     
-        The amino acids that have not yet reached their optimal conformation are listed in the console, along with feedback. 
+        The amino acids that have not yet reached their optimal conformation are listed in the tab, along with feedback. 
         Load an example file, then click and drag each amino acid to move it. Keep in mind that the peptide bonds are of a fixed length."""
         
 
@@ -606,7 +611,7 @@ class Game(object):
         self.loadBarHeight = self.screenSize*(0.10)
         self.loadBarWidth = self.screenSize*(0.70)
         self.gameScreenWidth = self.loadBarWidth
-        self.gameScreenHeight = self.screenSize*(0.9)
+        self.gameScreenHeight = self.screenSize
 
         self.buttonWidth= self.loadBarWidth*0.1
         self.buttonHeight = self.loadBarHeight*0.5
@@ -664,6 +669,11 @@ class Game(object):
 
         self.solveText = self.gamefont.render("AUTOSOLVE",True,self.black)
 
+        self.adviceText = self.gamefont.render(self.advice,True,self.black)
+
+        self.issueText = self.gamefont.render(self.issue,True,self.black)
+
+
 
     def loadFASTA(self): 
         dataDir="assets/data"
@@ -679,8 +689,11 @@ class Game(object):
                 self.gameSequence = sequence[start:start+5]
             self.fileLoaded=True
             self.unsolvedSequence = copy.copy(self.gameSequence)
+
+
+      
         else:
-            print("WRONG FILE TYPE")
+            self.issue = "WRONG FILE TYPE"
         
 
     def FASTAtest(self,fileName):
@@ -708,8 +721,8 @@ class Game(object):
 
     
     def checkLegal(self,aminoAcid,otherAminoAcids=None):
-        print("unsolved:", end="")  #add to the real UI
-        print(self.unsolvedSequence)
+        #print("unsolved:", end="")  #added to the real UI
+        #print(self.unsolvedSequence)
         if (otherAminoAcids==None):
             otherAminoAcids = copy.copy(self.getGameSequence())
             otherAminoAcids.remove(aminoAcid)
@@ -720,7 +733,7 @@ class Game(object):
             totalX+=otherAminoAcid.particle.x
             totalY+=otherAminoAcid.particle.y
             if (aminoAcid.particle.boundingBox.colliderect(otherAminoAcid.particle.boundingBox)):
-                print("Collision with other amino acid!")
+                self.advice = "Collision with other amino acid!"
                 return False
         centerX = totalX/len(otherAminoAcids)
         centerY = totalY/len(otherAminoAcids)
@@ -734,7 +747,7 @@ class Game(object):
                 if(other.sidechain.sulfide):
                     distance = abs(other.particle.x-aminoAcid.particle.x)
                     if(distance > threshold/2):
-                        print("sulfide containing amino acids should be near other sulfide containing amino acids")
+                        self.advice = "sulfide containing amino acids should be near other sulfide containing amino acids"
                   
                     else:
                         return self.satisfiedInteraction(aminoAcid, other)
@@ -744,7 +757,7 @@ class Game(object):
                 distance = abs(other.particle.x-aminoAcid.particle.x)
                 if (other.sidechain.charge==-1):
                     if (distance < threshold*1.5):
-                        print("positive charged amino acid cannot be near other positive charges")
+                        self.advice = "positive charged amino acid cannot be near other positive charges"
                   
                     else:
                         #possibly animate
@@ -761,7 +774,7 @@ class Game(object):
                 distance = abs(other.particle.x-aminoAcid.particle.x)
                 if (other.sidechain.charge==-1):
                     if (distance < threshold*1.5):
-                        print("negative charged amino acid cannot be near other negative charges")
+                        self.advice = "negative charged amino acid cannot be near other negative charges"
                   
                     else:
                         #possibly animate
@@ -777,7 +790,7 @@ class Game(object):
                 if(other.sidechain.hbond):
                     distance = abs(other.particle.x-aminoAcid.particle.x)
                     if(distance > threshold/2):
-                        print("hbonding amino acids should be near other hbonding amino acids")
+                        self.advice = "hbonding amino acids should be near other hbonding amino acids"
                      
                     else:
                         return self.satisfiedInteraction(aminoAcid, other)
@@ -786,7 +799,7 @@ class Game(object):
         if (not sidechain.polar):
             if (abs(aminoAcid.particle.x-centerX)>threshold or \
                 abs(aminoAcid.particle.y-centerY)>threshold):
-                print("nonpolar amino acid should be near the center of the protein")
+                self.advice = "nonpolar amino acid should be near the center of the protein"
                 
             else:
                 return self.satisfiedLocation(aminoAcid)
@@ -794,7 +807,7 @@ class Game(object):
         if (sidechain.polar or sidechain.charge!=0):
             if (abs(aminoAcid.particle.x-centerX)<threshold/4 or \
                 abs(aminoAcid.particle.y-centerY)<threshold/4):
-                print("polar or charged amino acid should be near the outside of the protein")
+                self.advice = "polar or charged amino acid should be near the outside of the protein"
                 
             else:
                 return self.satisfiedLocation(aminoAcid)
@@ -810,8 +823,11 @@ class Game(object):
         other.satisfied = True
         if (aminoAcid in self.unsolvedSequence):
             self.unsolvedSequence.remove(aminoAcid)
+            self.solvedSequence.append(aminoAcid)
+
         if (other in self.unsolvedSequence):
             self.unsolvedSequence.remove(other)
+            self.solvedSequence.append(other)
 
         return True
 
@@ -819,6 +835,7 @@ class Game(object):
         aminoAcid.satisfied = True
         if (aminoAcid in self.unsolvedSequence):
             self.unsolvedSequence.remove(aminoAcid)
+            self.solvedSequence.append(aminoAcid)
 
         return True
     '''
@@ -939,23 +956,32 @@ def main():
 
         pygame.draw.rect(game.screen,game.blue,game.helpButton)
         game.screen.blit(game.helpText,game.helpButton)
-
-        game.screen.blit(game.infoText,game.infoBar)
-        game.screen.blit(game.infoImage, game.infoImageBox.topleft)
-
+        
         pygame.draw.rect(game.screen,game.yellow,game.solveButton)
         game.screen.blit(game.solveText,game.solveButton)
         
 
-        
+        sideBarWidth = game.gameScreenWidth*1.02
+        game.screen.blit(game.infoText,(sideBarWidth,game.gameScreenHeight/20))
+        game.screen.blit(game.infoImage, game.infoImageBox.topleft)
+
+        game.screen.blit(game.adviceText,(sideBarWidth, game.gameScreenHeight/2))
+
+        game.screen.blit(game.issueText,(sideBarWidth, 9*game.gameScreenHeight/15))
+
+        game.satisfiedAminoAcidsText = game.smallfont.render("Solved: "+ str(game.solvedSequence),True,game.black)
+        game.unsatisfiedAminoAcidsText = game.smallfont.render("Unsolved: "+ str(game.unsolvedSequence),True,game.black)
+
+        game.screen.blit(game.satisfiedAminoAcidsText,(sideBarWidth, 18*game.gameScreenHeight/40))
+        game.screen.blit(game.unsatisfiedAminoAcidsText,(sideBarWidth, 19*game.gameScreenHeight/40))
+        game.drawSequence()
+
         if (game.solutionDisplay):
-            #print("ay")
+
             #game.screen.blit(game.solveText,game.solveButton)
             game.screen.blit(game.gameOverText,(game.width/3, game.height/2))
             game.screen.blit(game.clickAnywhereText,(game.width/3, 4*game.height/7))
             
-
-        game.drawSequence()
 
         for event in pygame.event.get():
             if (event.type == pygame.QUIT):
@@ -980,8 +1006,9 @@ def main():
                         help(game)
 
                     elif (game.solveButton.collidepoint(mousePos) and left):
-                        print("solving....")
+                        
                         if (game.fileLoaded):
+                            print("solving....")
                             solve(game)
                         
                     elif(game.screen.get_at(mousePos)!=game.white \
@@ -1014,6 +1041,7 @@ def main():
                                 aminoAcid.x = aminoAcid.particle.x
                                 aminoAcid.y = aminoAcid.particle.y
                                 #game.checkAssociates(aminoAcid)
+                                
                                 if(game.checkForWin()):
                                     game.gameOver()
                             else:
@@ -1061,7 +1089,6 @@ def main():
                        
         pygame.display.update()
    
-
     
     pygame.quit()
 
@@ -1118,9 +1145,12 @@ def help(game):
 
 def solve(game):
     solver = ProteinSolver(game)
-    print("Solution:" + str(solver.solve()))
+    if(solver.solve()==None):
+        game.issue="Autosolver could not find a solution."
     game.gameSequence[len(game.gameSequence)-1].x += 1
     game.checkLegal(game.gameSequence[len(game.gameSequence)-1])
+    game.unsolvedSequence = []
+    game.solvedSequence = game.gameSequence
     if(game.checkForWin()):
         game.gameOver()
 

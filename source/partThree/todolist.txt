@@ -17,6 +17,9 @@ Done list:
 
 1a) fix the "no attribute" error 
 
+4) Autosolve feature
+ - design and implement
+
 Do list:
 
 2) Build a working UI that incorporates the current command line help (converting all print statements to into the interface)
@@ -26,8 +29,6 @@ Do list:
 
 3) Configure path to work with Mac
 
-4) Autosolve feature
- - design and implement
 
 5) Fix all graphical glitches
   - text and lines glitching

@@ -389,6 +389,8 @@ class Game(object):
         self.blue = (0,0,255)
         self.yellow = (255,255,0)
         self.purple = (255,0,255)
+        self.gray = (128,128,128)
+        self.darkRed = (128,0,0)
         self.screenSize,self.screenSize2=pygame.display.get_surface().get_size()
 
         #splash screen
@@ -407,17 +409,17 @@ class Game(object):
         self.chargedBlue = self.gamefont.render("BLUE - negatively charged amino acids",True,self.blue)
         self.polarPurple = self.gamefont.render("PURPLE - polar amino acids",True,self.purple)
 
-        self.locationRules = self.gamefont.render("To satisfy via location, follow the below rules.", True, self.black)
-        self.nonpolarRules = self.gamefont.render("nonpolars prefer to be near the center of the protein due to hydrophobic interaction with water.",True,self.black)
-        self.polarLocationRules = self.gamefont.render("polars prefer to be away from the center of the protein due to hydrophilic interaction with water",True,self.black)
-        self.chargedLocationRules = self.gamefont.render("positive/negatively charged amino acids are also hydrophilic, but additionally must not be next to an like charge.",True,self.black)
+        self.locationRules = self.gamefont.render("To satisfy via location, follow the below rules.", True, self.gray)
+        self.nonpolarRules = self.gamefont.render("Nonpolars prefer to be near the center of the protein due to hydrophobic interaction with water.",True,self.black)
+        self.polarLocationRules = self.gamefont.render("Polars prefer to be away from the center of the protein due to hydrophilic interaction with water",True,self.black)
+        self.chargedLocationRules = self.gamefont.render("Positive/negatively charged amino acids are also hydrophilic, but additionally must not be next to an like charge.",True,self.black)
 
-        self.interactionRules = self.gamefont.render("To satisfy via interaction (satisfies both amino acids), follow the below rules.", True, self.black)
+        self.interactionRules = self.gamefont.render("To satisfy via interaction (satisfies both amino acids), follow the below rules.", True, self.gray)
         self.disulfideBridgeRules = self.gamefont.render("Sulfide containing amino acids can form disulfide bridges.", True, self.black)
         self.electrostaticRules = self.gamefont.render("Charged amino acids can experience electrostatic attraction with an opposite charge.", True, self.black)
         self.hbondingRules = self.gamefont.render("All polar and charged amino acids can hydrogen bond with each other.", True, self.black)
 
-        self.forMoreInfoText = self.gamefont.render("For more information about amino acid biochemistry, and to see the limitations that ProteinEDU takes, consult:", True,self.black)
+        self.forMoreInfoText = self.gamefont.render("For more information about amino acid biochemistry, and to see the limitations that ProteinEDU takes, consult:", True,self.darkRed)
         helpString = """
        
     
@@ -451,6 +453,10 @@ class Game(object):
         self.infoImageWidth = self.buttonWidth
         self.infoImageHeight = self.buttonWidth*3
 
+        self.solveButtonX1 = self.loadBarWidth*0.7
+        self.solveButtonY1 = self.loadButtonY1
+
+
         
         #load UI objects
         self.gameScreen =pygame.Rect(0,self.loadBarHeight,self.gameScreenWidth,
@@ -477,6 +483,11 @@ class Game(object):
         self.infoImageBox = pygame.Rect(self.infoImageX,self.infoImageY,self.infoImageWidth,self.infoImageHeight)
         
         self.gameOverText = self.gamefont.render("GAMEOVER",True,self.white)
+
+        self.solveButton =pygame.Rect(self.solveButtonX1,self.solveButtonY1,
+                                        self.buttonWidth,self.buttonHeight)
+
+        self.solveText = self.gamefont.render("AUTOSOLVE",True,self.black)
 
 
     def loadFASTA(self): 
@@ -521,11 +532,12 @@ class Game(object):
     
 
     
-    def checkLegal(self,aminoAcid):
+    def checkLegal(self,aminoAcid,otherAminoAcids):
         print("unsolved:", end="")  #add to the real UI
         print(self.unsolvedSequence)
-        otherAminoAcids = copy.copy(self.getGameSequence())
-        otherAminoAcids.remove(aminoAcid)
+        if (otherAminoAcids=None)
+            otherAminoAcids = copy.copy(self.getGameSequence())
+            otherAminoAcids.remove(aminoAcid)
         totalX = 0
         totalY = 0
         
@@ -748,8 +760,10 @@ def main():
         game.screen.blit(game.helpText,game.helpButton)
 
         game.screen.blit(game.infoText,game.infoBar)
-            
         game.screen.blit(game.infoImage, game.infoImageBox.topleft)
+
+        pygame.draw.rect(game.screen,game.yellow,game.solveButton)
+        game.screen.blit(game.solveText,game.solveButton)
        
         game.drawSequence()
         
@@ -772,7 +786,10 @@ def main():
       
                 elif (game.helpButton.collidepoint(mousePos) and left):
                     help(game)
-    
+
+                elif (game.solveButton.collidepoint(mousePos) and left):
+                    solve(game)
+                    print("solving....")
                 elif(game.screen.get_at(mousePos)!=game.white \
                     and mouseX<game.gameScreenWidth \
                     and mouseY>game.loadBarHeight \
@@ -872,15 +889,26 @@ def help(game):
     while (not helpDone):
 
         game.screen.fill((255,255,255))
-        game.screen.blit(game.helpTitleText,(game.screenSize/3,game.screenSize/20))
-        game.screen.blit(game.objectiveText,(game.screenSize/15,3*game.screenSize/25))
-        game.screen.blit(game.explanationText,(game.screenSize/15,4*game.screenSize/25))
-        game.screen.blit(game.categoriesText,(game.screenSize/15,5*game.screenSize/25))
-        game.screen.blit(game.nonpolarGreen,(game.screenSize/15,6*game.screenSize/25))
-        game.screen.blit(game.nonpolarYellow,(game.screenSize/15,7*game.screenSize/25))
-        game.screen.blit(game.chargedRed,(game.screenSize/15,8*game.screenSize/25))
-        game.screen.blit(game.chargedBlue,(game.screenSize/15,9*game.screenSize/25))
-        game.screen.blit(game.polarPurple,(game.screenSize/15,10*game.screenSize/25))
+        textX1 = game.screenSize/15
+        textX2 = game.screenSize/5
+        game.screen.blit(game.helpTitleText,(game.screenSize/3,game.screenSize/40))
+        game.screen.blit(game.objectiveText,(textX1,3*game.screenSize/40))
+        game.screen.blit(game.explanationText,(textX1,4*game.screenSize/40))
+        game.screen.blit(game.categoriesText,(textX1,5*game.screenSize/40))
+        game.screen.blit(game.nonpolarGreen,(textX1,6*game.screenSize/40))
+        game.screen.blit(game.nonpolarYellow,(textX1,7*game.screenSize/40))
+        game.screen.blit(game.chargedRed,(textX1,8*game.screenSize/40))
+        game.screen.blit(game.chargedBlue,(textX1,9*game.screenSize/40))
+        game.screen.blit(game.polarPurple,(textX1,10*game.screenSize/40))
+        game.screen.blit(game.locationRules,(textX1,11*game.screenSize/40))
+        game.screen.blit(game.nonpolarRules,(textX2,12*game.screenSize/40))
+        game.screen.blit(game.polarLocationRules,(textX2,13*game.screenSize/40))
+        game.screen.blit(game.chargedLocationRules,(textX2,14*game.screenSize/40))
+        game.screen.blit(game.interactionRules,(textX1,15*game.screenSize/40))
+        game.screen.blit(game.disulfideBridgeRules,(textX2,16*game.screenSize/40))
+        game.screen.blit(game.electrostaticRules,(textX2,17*game.screenSize/40))
+        game.screen.blit(game.hbondingRules,(textX2,18*game.screenSize/40))
+        game.screen.blit(game.forMoreInfoText,(textX1,21*game.screenSize/40))
       
         for event in pygame.event.get():
             if (event.type == pygame.MOUSEBUTTONDOWN):
@@ -891,9 +919,149 @@ def help(game):
                 
         pygame.display.update() 
 
-            
+def solve(game):
+    solver =ProteinSolver(game)
 
 
 if __name__ == '__main__':
     main()
+
+#autosolver
+
+
+# from http://www.cs.cmu.edu/~112/notes/notes-recursion-part2.html#genericBacktrackingSolver
+##############################################
+# Generic backtracking-based puzzle solver
+#
+# Subclass this class to solve your puzzle
+# using backtracking.
+#
+# To see how useful backtracking is, run with checkConstraints=True
+# and again with checkConstraints=False
+# You will see the number of total states go up (probably by a lot).
+##############################################
+
+class BacktrackingPuzzleSolver(object):
+    def solve(self):
+        self.moves = [ ]
+        self.states = set()
+        # If checkConstraints is False, then do not check the backtracking
+        # constraints as we go (so instead do an exhaustive search)
+
+        # Be sure to set self.startArgs and self.startState in __init__
+        self.solutionState = self.solveFromState(self.startState)
+
+        return (self.moves, self.solutionState)
+
+    def solveFromState(self, state):
+        if state in self.states:
+            # we have already seen this state, so skip it
+            return None
+        self.states.add(state)
+        if self.isSolutionState(state):
+            # we found a solution, so return it!
+            return state
+        else:
+            for move in self.getLegalMoves(state):
+                # 1. Apply the move
+                childState = self.doMove(state, move)
+                # 2. Verify the move satisfies the backtracking constraints
+                #    (only proceed if so)
+                if ((self.stateSatisfiesConstraints(childState))):
+                    # 3. Add the move to our solution path (self.moves)
+                    self.moves.append(move)
+                    # 4. Try to recursively solve from this new state
+                    result = self.solveFromState(childState)
+                    # 5. If we solved it, then return the solution!
+                    if result != None:
+                        return result
+                    # 6. Else we did not solve it, so backtrack and
+                    #    remove the move from the solution path (self.moves)
+                    self.moves.pop()
+            return None
+
+    # You have to implement these:
+
+    def __init__(self):
+        # Be sure to set self.startArgs and self.startState here
+        pass
+
+    def stateSatisfiesConstraints(self, state):
+        # return True if the state satisfies the solution constraints so far
+        raise NotImplementedError
+
+    def isSolutionState(self, state):
+        # return True if the state is a solution
+        raise NotImplementedError
+
+    def getLegalMoves(self, state):
+        # return a list of the legal moves from this state (but not
+        # taking the solution constraints into account)
+        raise NotImplementedError
+
+    def doMove(self, state, move):
+        # return a new state that results from applying the given
+        # move to the given state
+        raise NotImplementedError
+
+##############################################
+# Generic State Class
+#
+# Subclass this with the state required by your problem.
+# Note that this is a bit hacky with __eq__, __hash__, and __repr__
+# (it's fine for 112, but after 112, you should take the time to
+# write better class-specific versions of these)
+##############################################
+
+class State(object):
+    def __eq__(self, other): return (other != None) and self.__dict__ == other.__dict__
+    def __hash__(self): return hash(str(self.__dict__)) # hack but works even with lists
+    def __repr__(self): return str(self.__dict__)
+
+
+class ProteinState(State):
+    def __init__(self, unplaced, placed):
+        self.placed = placed
+        self.unplaced = unplaced
+
+    def __repr__(self):
+        return "Placed: "+str(self.placed)+", Unplaced: "+str(self.unplaced)
+ 
+
+class ProteinSolver(BacktrackingPuzzleSolver):
+    def __init__(self, game):
+        self.L = game.getGameSequence()
+        self.L[0].x = game.gameScreenWidth//2
+        self.L[0].y = game.gameScreenHeight//2
+        self.startState = ProteinState(L[1:],L[0])
+
+
+    def stateSatisfiesConstraints(self, state):
+        lastPlaced = state.placed[len(state.placed)-1]
+        otherPlaced = copy.copy(state.placed)
+        otherPlaced.remove(lastPlaced)
+        return checkLegal(lastPlaced,otherPlaced)
+
+    def isSolutionState(self, state):
+        if (state.placed and (not state.unplaced)):
+            for aminoAcid in state.placed:
+                if (not aminoAcid.satisfied):
+                    return False
+            return True
+        return False
+  
+    def getLegalMoves(self, state):
+        legalMoves = []
+        for dx in range(0,3):
+            for dy in range(0,3):
+                if (not (dx==0 and dy==0)):
+        
+        return legalMoves
+
+
+    def doMove(self, state, move):
+        newAminoAcid = state.unplaced[0]
+        placed = state.placed + newAminoAcid
+        unplaced = copy.copy(state.placed)
+        newState = ProteinState(placed,unplaced)
 

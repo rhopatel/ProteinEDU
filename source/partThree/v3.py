@@ -466,8 +466,9 @@ class ProteinSolver(BacktrackingPuzzleSolver):
         """   for aminoAcid in self.L:
             aminoAcid.x = None
             aminoAcid.y = None"""
-        self.L[0].x = game.gameScreenWidth//2
-        self.L[0].y = game.gameScreenHeight//2
+        self.L[0].particle.x = game.gameScreenWidth//2
+        self.L[0].particle.y = game.gameScreenHeight//2
+        self.L[0].satisfied = True
         #self.startX = self.L[0].x
         #self.startY = self.L[0].y
         placed = [self.L[0]]
@@ -499,7 +500,11 @@ class ProteinSolver(BacktrackingPuzzleSolver):
         legalMoves = []
         for dx in range(-4,4):
             for dy in range(-4,4):
-                if (not (dx==0 and dy==0)):
+                newAminoAcid = state.unplaced[0]
+                lastPlaced = state.placed[len(state.placed)-1]
+                newX = lastPlaced.particle.x + (dx*(self.game.bondLength/6))
+                newY = newAminoAcid.particle.y = lastPlaced.particle.y + (dy*(self.game.bondLength/6))
+                if (not (dx==0 and dy==0) and newX>0 and newY>self.game.loadBarHeight and newX<self.game.gameScreenWidth and newY<self.game.height):
                     legalMoves.append((dx,dy))
         #continue work here
         return legalMoves
@@ -510,8 +515,8 @@ class ProteinSolver(BacktrackingPuzzleSolver):
         dx,dy = move
         lastPlaced = state.placed[len(state.placed)-1]
         print(lastPlaced)
-        newAminoAcid.particle.x = lastPlaced.x + (dx*(self.game.bondLength/5))
-        newAminoAcid.particle.y = lastPlaced.y + (dy*(self.game.bondLength/5))
+        newAminoAcid.particle.x = lastPlaced.particle.x + (dx*(self.game.bondLength/6))
+        newAminoAcid.particle.y = lastPlaced.particle.y + (dy*(self.game.bondLength/6))
         placed = copy.copy(state.placed)
         placed.append(newAminoAcid)
         unplaced = copy.copy(state.unplaced)
@@ -707,8 +712,8 @@ class Game(object):
         totalY = 0
         
         for otherAminoAcid in otherAminoAcids:
-            totalX+=otherAminoAcid.x
-            totalY+=otherAminoAcid.y
+            totalX+=otherAminoAcid.particle.x
+            totalY+=otherAminoAcid.particle.y
             if (aminoAcid.particle.boundingBox.colliderect(otherAminoAcid.particle.boundingBox)):
                 print("Collision with other amino acid!")
                 return False
@@ -722,7 +727,7 @@ class Game(object):
         if (sidechain.sulfide):
             for other in otherAminoAcids:
                 if(other.sidechain.sulfide):
-                    distance = abs(other.x-aminoAcid.particle.x)
+                    distance = abs(other.particle.x-aminoAcid.particle.x)
                     if(distance > threshold/2):
                         print("sulfide containing amino acids should be near other sulfide containing amino acids")
                   
@@ -731,7 +736,7 @@ class Game(object):
 
         if(sidechain.charge==1):
             for other in otherAminoAcids:
-                distance = abs(otherAminoAcid.x-aminoAcid.particle.x)
+                distance = abs(other.particle.x-aminoAcid.particle.x)
                 if (other.sidechain.charge==-1):
                     if (distance < threshold*1.5):
                         print("positive charged amino acid cannot be near other positive charges")
@@ -748,7 +753,7 @@ class Game(object):
         
             for other in otherAminoAcids:
              
-                distance = abs(other.x-aminoAcid.particle.x)
+                distance = abs(other.particle.x-aminoAcid.particle.x)
                 if (other.sidechain.charge==-1):
                     if (distance < threshold*1.5):
                         print("negative charged amino acid cannot be near other negative charges")
@@ -765,7 +770,7 @@ class Game(object):
         if (sidechain.hbond):
             for other in otherAminoAcids:
                 if(other.sidechain.hbond):
-                    distance = abs(other.x-aminoAcid.particle.x)
+                    distance = abs(other.particle.x-aminoAcid.particle.x)
                     if(distance > threshold/2):
                         print("hbonding amino acids should be near other hbonding amino acids")
                      
@@ -788,8 +793,7 @@ class Game(object):
                 
             else:
                 return self.satisfiedLocation(aminoAcid)
-
-       
+        
         return False
 
     
@@ -1093,7 +1097,11 @@ def help(game):
 def solve(game):
     solver = ProteinSolver(game)
     print("Solution:" + str(solver.solve()))
-
+    game.gameSequence[len(game.gameSequence)-1].x += 1
+    game.checkLegal(game.gameSequence[len(game.gameSequence)-1])
+    if(game.checkForWin()):
+        pass
+        #game.gameOver()
 
 if __name__ == '__main__':
     main()

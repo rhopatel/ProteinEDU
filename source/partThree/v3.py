@@ -504,7 +504,11 @@ class ProteinSolver(BacktrackingPuzzleSolver):
                 lastPlaced = state.placed[len(state.placed)-1]
                 newX = lastPlaced.particle.x + (dx*(self.game.bondLength/6))
                 newY = newAminoAcid.particle.y = lastPlaced.particle.y + (dy*(self.game.bondLength/6))
-                if (not (dx==0 and dy==0) and newX>0 and newY>self.game.loadBarHeight and newX<self.game.gameScreenWidth and newY<self.game.height):
+                if (not (dx==0 and dy==0) \
+                    and newX-newAminoAcid.r>0 \
+                    and newY-newAminoAcid.r>self.game.loadBarHeight \
+                    and newX-newAminoAcid.r<self.game.gameScreenWidth \
+                    and newY-newAminoAcid.r<self.game.height):
                     legalMoves.append((dx,dy))
         #continue work here
         return legalMoves
@@ -536,7 +540,7 @@ class Game(object):
 
         self.delay = delay
         self.done = False
-        
+        self.solutionDisplay = False
         os.environ['SDL_VIDEO_WINDOW_POS'] = "15,40"
 
         pygame.init()
@@ -652,7 +656,8 @@ class Game(object):
         self.resetSelection()
         self.infoImageBox = pygame.Rect(self.infoImageX,self.infoImageY,self.infoImageWidth,self.infoImageHeight)
         
-        self.gameOverText = self.gamefont.render("GAMEOVER",True,self.white)
+        self.gameOverText = self.titlefont.render("GAMEOVER",True,self.black)
+        self.clickAnywhereText = self.gamefont.render("Click anywhere to end the game.",True,self.black)
 
         self.solveButton =pygame.Rect(self.solveButtonX1,self.solveButtonY1,
                                         self.buttonWidth,self.buttonHeight)
@@ -908,9 +913,11 @@ class Game(object):
         self.infoImage= pygame.image.load("assets/images/empty.png")
 
     def gameOver(self):
-        self.done = True
-        self.screen.fill((0,255,0))
-        self.screen.blit(self.gameOverText,self.gameScreen.center)
+        self.done = False
+        self.solutionDisplay = True
+        #self.screen.fill((0,255,0))
+        print("Game Over.")
+
         
 def main():
     game = Game(10)
@@ -938,51 +945,63 @@ def main():
 
         pygame.draw.rect(game.screen,game.yellow,game.solveButton)
         game.screen.blit(game.solveText,game.solveButton)
-       
+        
+
+        
+        if (game.solutionDisplay):
+            #print("ay")
+            #game.screen.blit(game.solveText,game.solveButton)
+            game.screen.blit(game.gameOverText,(game.width/3, game.height/2))
+            game.screen.blit(game.clickAnywhereText,(game.width/3, 4*game.height/7))
+            
+
         game.drawSequence()
 
         for event in pygame.event.get():
             if (event.type == pygame.QUIT):
                 game.done = True
             elif (event.type == pygame.MOUSEBUTTONDOWN):
-                mousePos = pygame.mouse.get_pos()
-                mouseX,mouseY = mousePos
-                left,right,middle=pygame.mouse.get_pressed()
-                if (game.loadButton.collidepoint(mousePos) and left):
-                    game.loadFASTA()
-                    game.initializeGameScreen()
-                    game.fileLoaded = True
-                elif (game.clearButton.collidepoint(mousePos) and left):
-                    game.gameSequence = None
-                    game.gameFASTA = None
-                    game.fileLoaded = False
-      
-                elif (game.helpButton.collidepoint(mousePos) and left):
-                    help(game)
-
-                elif (game.solveButton.collidepoint(mousePos) and left):
-                    print("solving....")
-                    if (game.fileLoaded):
-                        solve(game)
-                    
-                elif(game.screen.get_at(mousePos)!=game.white \
-                    and mouseX<game.gameScreenWidth \
-                    and mouseY>game.loadBarHeight \
-                    and mouseY<game.gameScreenHeight):
-        
-                    for aminoAcid in game.getGameSequence():
-                        sqx = (mouseX - aminoAcid.particle.x)**2
-                        sqy = (mouseY - aminoAcid.particle.y)**2
-
-                        if (math.sqrt(sqx + sqy) < aminoAcid.r):
-
-                            aminoAcid.particle.clicked=True
-                            game.displayInformation(aminoAcid)
-                        else:
-                            pass
-                            
+                if (game.solutionDisplay):
+                    game.done = True
                 else:
-                    game.resetSelection()
+                    mousePos = pygame.mouse.get_pos()
+                    mouseX,mouseY = mousePos
+                    left,right,middle=pygame.mouse.get_pressed()
+                    if (game.loadButton.collidepoint(mousePos) and left):
+                        game.loadFASTA()
+                        game.initializeGameScreen()
+                        game.fileLoaded = True
+                    elif (game.clearButton.collidepoint(mousePos) and left):
+                        game.gameSequence = None
+                        game.gameFASTA = None
+                        game.fileLoaded = False
+        
+                    elif (game.helpButton.collidepoint(mousePos) and left):
+                        help(game)
+
+                    elif (game.solveButton.collidepoint(mousePos) and left):
+                        print("solving....")
+                        if (game.fileLoaded):
+                            solve(game)
+                        
+                    elif(game.screen.get_at(mousePos)!=game.white \
+                        and mouseX<game.gameScreenWidth \
+                        and mouseY>game.loadBarHeight \
+                        and mouseY<game.gameScreenHeight):
+            
+                        for aminoAcid in game.getGameSequence():
+                            sqx = (mouseX - aminoAcid.particle.x)**2
+                            sqy = (mouseY - aminoAcid.particle.y)**2
+
+                            if (math.sqrt(sqx + sqy) < aminoAcid.r):
+
+                                aminoAcid.particle.clicked=True
+                                game.displayInformation(aminoAcid)
+                            else:
+                                pass
+                                
+                    else:
+                        game.resetSelection()
 
             elif (event.type == pygame.MOUSEBUTTONUP):
                 mouseX, mouseY = pygame.mouse.get_pos()
@@ -1041,6 +1060,9 @@ def main():
                         brokenLink=None
                        
         pygame.display.update()
+   
+
+    
     pygame.quit()
 
 def intro(game):
@@ -1100,8 +1122,7 @@ def solve(game):
     game.gameSequence[len(game.gameSequence)-1].x += 1
     game.checkLegal(game.gameSequence[len(game.gameSequence)-1])
     if(game.checkForWin()):
-        pass
-        #game.gameOver()
+        game.gameOver()
 
 if __name__ == '__main__':
     main()

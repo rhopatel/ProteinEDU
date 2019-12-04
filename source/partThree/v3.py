@@ -451,10 +451,9 @@ class State(object):
 
 
 class ProteinState(State):
-    def __init__(self, unplaced, placed):
+    def __init__(self, placed, unplaced):
         self.placed = placed
         self.unplaced = unplaced
-
 
     def __repr__(self):
         return "Placed: "+str(self.placed)+", Unplaced: "+str(self.unplaced)
@@ -471,14 +470,20 @@ class ProteinSolver(BacktrackingPuzzleSolver):
         self.L[0].y = game.gameScreenHeight//2
         #self.startX = self.L[0].x
         #self.startY = self.L[0].y
-        self.startState = ProteinState(self.L[1:],[self.L[0]])
+        placed = [self.L[0]]
+        print(placed)
+        unplaced = self.L[1:]
+        self.startState = ProteinState(placed,unplaced)
 
 
     def stateSatisfiesConstraints(self, state):
+        print(len(state.placed))
         lastPlaced = state.placed[len(state.placed)-1]
         otherPlaced = copy.copy(state.placed)
         otherPlaced.remove(lastPlaced)
-        return self.game.checkLegal(lastPlaced,otherPlaced)
+        if (otherPlaced):
+            return self.game.checkLegal(lastPlaced,otherPlaced)
+        return True
 
     def isSolutionState(self, state):
         if (state.placed and (not state.unplaced)):
@@ -488,7 +493,7 @@ class ProteinSolver(BacktrackingPuzzleSolver):
             return True
         return False
   
-    def getLegalMoves(self, state):
+    def getLegalMoves(self, state): #currently, none of these work, and the puzzle solver gives up and doesn't proceed
         if (not state.unplaced):
             return []
         legalMoves = []
@@ -507,9 +512,12 @@ class ProteinSolver(BacktrackingPuzzleSolver):
         print(lastPlaced)
         newAminoAcid.particle.x = lastPlaced.x + (dx*(self.game.bondLength/5))
         newAminoAcid.particle.y = lastPlaced.y + (dy*(self.game.bondLength/5))
-        placed = state.placed.append(newAminoAcid)
-        unplaced = copy.copy(state.placed)
+        placed = copy.copy(state.placed)
+        placed.append(newAminoAcid)
+        unplaced = copy.copy(state.unplaced)
+        unplaced.remove(newAminoAcid)
         newState = ProteinState(placed,unplaced)
+        print(newState)
         self.game.drawSequence()
         pygame.display.update()
         return newState
@@ -1084,7 +1092,7 @@ def help(game):
 
 def solve(game):
     solver = ProteinSolver(game)
-    solver.solve()
+    print("Solution:" + str(solver.solve()))
 
 
 if __name__ == '__main__':

@@ -186,7 +186,7 @@ class Valine(AminoAcid):
         abbr = "Val" 
         super().__init__(sidechain,sidechain.color,abbr)
 
-#unique sidechain functional groups (add the rest)
+#unique sidechain functional groups
 class AlanineSideChain(FunctionalGroup):
     def __init__(self):
         super().__init__(0,False,False,False)
@@ -358,7 +358,7 @@ class FASTA(object):
     def __repr__(self):
         return str(self.getSequence())
 
-#autosolver
+#autosolver using backtracking:
 
 # from http://www.cs.cmu.edu/~112/notes/notes-recursion-part2.html#genericBacktrackingSolver
 ##############################################
@@ -463,22 +463,17 @@ class ProteinSolver(BacktrackingPuzzleSolver):
     def __init__(self, game):
         self.game = game
         self.L = self.game.getGameSequence()
-        """   for aminoAcid in self.L:
-            aminoAcid.x = None
-            aminoAcid.y = None"""
+      
         self.L[0].particle.x = game.gameScreenWidth//2
         self.L[0].particle.y = game.gameScreenHeight//2
         self.L[0].satisfied = True
-        #self.startX = self.L[0].x
-        #self.startY = self.L[0].y
+
         placed = [self.L[0]]
-        #print(placed)
         unplaced = self.L[1:]
         self.startState = ProteinState(placed,unplaced)
 
 
     def stateSatisfiesConstraints(self, state):
-        #print(len(state.placed))
         lastPlaced = state.placed[len(state.placed)-1]
         otherPlaced = copy.copy(state.placed)
         otherPlaced.remove(lastPlaced)
@@ -494,7 +489,7 @@ class ProteinSolver(BacktrackingPuzzleSolver):
             return True
         return False
   
-    def getLegalMoves(self, state): #currently, none of these work, and the puzzle solver gives up and doesn't proceed
+    def getLegalMoves(self, state): 
         if (not state.unplaced):
             return []
         legalMoves = []
@@ -512,7 +507,7 @@ class ProteinSolver(BacktrackingPuzzleSolver):
                     and newX-newAminoAcid.r<self.game.gameScreenWidth \
                     and newY+newAminoAcid.r<self.game.gameScreenHeight/2):
                     legalMoves.append((dx,dy))
-        #continue work here
+       
         return legalMoves
 
 
@@ -669,7 +664,7 @@ class Game(object):
 
         self.solveText = self.gamefont.render("AUTOSOLVE",True,self.black)
 
-        self.adviceText = self.gamefont.render(self.advice,True,self.black)
+        
 
         self.issueText = self.gamefont.render(self.issue,True,self.black)
 
@@ -700,7 +695,7 @@ class Game(object):
         testTranslator = FASTA(fileName)
         final = testTranslator.getSequence()
         module_manager.review()
-        print(final) 
+        return final
 
     def getGameSequence(self):
         return self.gameSequence
@@ -721,8 +716,6 @@ class Game(object):
 
     
     def checkLegal(self,aminoAcid,otherAminoAcids=None):
-        #print("unsolved:", end="")  #added to the real UI
-        #print(self.unsolvedSequence)
         if (otherAminoAcids==None):
             otherAminoAcids = copy.copy(self.getGameSequence())
             otherAminoAcids.remove(aminoAcid)
@@ -759,9 +752,7 @@ class Game(object):
                     if (distance < threshold*1.5):
                         self.advice = "positive charged amino acid cannot be near other positive charges"
                   
-                    else:
-                        #possibly animate
-                        pass
+         
                 elif (other.sidechain.charge==1):
                     if (distance < threshold*1.5):
                   
@@ -775,10 +766,7 @@ class Game(object):
                 if (other.sidechain.charge==-1):
                     if (distance < threshold*1.5):
                         self.advice = "negative charged amino acid cannot be near other negative charges"
-                  
-                    else:
-                        #possibly animate
-                        pass
+         
                 elif (other.sidechain.charge==1):
                     if (distance < threshold*1.5):
            
@@ -838,28 +826,12 @@ class Game(object):
             self.solvedSequence.append(aminoAcid)
 
         return True
-    '''
-    def checkAssociates(self,aminoAcid):
-        otherAminoAcids = copy.copy(self.getGameSequence())
-        otherAminoAcids.remove(aminoAcid)
-        sidechain = aminoAcid.sidechain
-        threshold = (self.gameScreenWidth/7)
-                    
 
-        for associate in aminoAcid.associates:     
-            distance = abs(associate.x-aminoAcid.particle.x)
-            if(distance > threshold/3):
-                print("interaction broken")
-                #aminoAcid.satisfied = False
-                self.unsolvedSequence.append(aminoAcid)
-                aminoAcid.associates.remove(associate)
-                associate.associates.remove(aminoAcid)
-        '''
+
     def checkForWin(self):
         for aminoAcid in self.gameSequence:
             if not aminoAcid.satisfied:
                 return False
-        print("SOLVED!!!")
         return True
 
     def undoMove(self,aminoAcid,iterations=10):
@@ -902,7 +874,7 @@ class Game(object):
                 prevX = aminoAcid.particle.x
                 prevY = aminoAcid.particle.y
                 aminoAcid.draw(self)
-                #print(aminoAcid.associates)
+         
                 for associate in aminoAcid.associates: #draw interactions
                     if (aminoAcid.sidechain.sulfide and associate.sidechain.sulfide):
                         pygame.draw.line(self.screen,self.yellow,(associate.particle.x,associate.particle.y),
@@ -932,13 +904,11 @@ class Game(object):
     def gameOver(self):
         self.done = False
         self.solutionDisplay = True
-        #self.screen.fill((0,255,0))
-        print("Game Over.")
+        advice = "Game Over."
 
         
 def main():
     game = Game(10)
-    #game.FASTAtest("assets/data/lab.fasta")
     intro(game)
     while not game.done:
         pygame.time.delay(game.delay)
@@ -965,6 +935,7 @@ def main():
         game.screen.blit(game.infoText,(sideBarWidth,game.gameScreenHeight/20))
         game.screen.blit(game.infoImage, game.infoImageBox.topleft)
 
+        game.adviceText = game.smallfont.render(game.advice,True,game.black)
         game.screen.blit(game.adviceText,(sideBarWidth, game.gameScreenHeight/2))
 
         game.screen.blit(game.issueText,(sideBarWidth, 9*game.gameScreenHeight/15))
@@ -978,7 +949,7 @@ def main():
 
         if (game.solutionDisplay):
 
-            #game.screen.blit(game.solveText,game.solveButton)
+      
             game.screen.blit(game.gameOverText,(game.width/3, game.height/2))
             game.screen.blit(game.clickAnywhereText,(game.width/3, 4*game.height/7))
             
@@ -1008,7 +979,7 @@ def main():
                     elif (game.solveButton.collidepoint(mousePos) and left):
                         
                         if (game.fileLoaded):
-                            print("solving....")
+                            game.advice = "solving...."
                             solve(game)
                         
                     elif(game.screen.get_at(mousePos)!=game.white \
@@ -1040,7 +1011,7 @@ def main():
                                 and mouseX<game.gameScreenWidth and mouseY < game.gameScreenHeight):
                                 aminoAcid.x = aminoAcid.particle.x
                                 aminoAcid.y = aminoAcid.particle.y
-                                #game.checkAssociates(aminoAcid)
+                  
                                 
                                 if(game.checkForWin()):
                                     game.gameOver()
@@ -1083,7 +1054,7 @@ def main():
                                 aminoAcid.particle.x = mouseX
                                 aminoAcid.particle.y = mouseY
                     if (brokenLink!=None):
-                        #tell the user what they did
+                        game.advice = "Too far"
                         game.undoMove(brokenLink,iterations=7)
                         brokenLink=None
                        

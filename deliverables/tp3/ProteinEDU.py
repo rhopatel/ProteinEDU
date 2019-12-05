@@ -549,7 +549,7 @@ class Game(object):
         self.root = tkinter.Tk()
         self.width = self.root.winfo_screenwidth()
         self.height = self.root.winfo_screenheight()
-        self.screen = pygame.display.set_mode((int(self.width*0.9),int(self.height*0.9)),pygame.RESIZABLE)
+        self.screen = pygame.display.set_mode((int(self.width),int(self.height)),pygame.RESIZABLE)
         
         self.screen.fill((255,255,255))
         pygame.display.set_caption("ProteinEDU")

@@ -1,6 +1,5 @@
-Project Description: 
 
-Name - ProteinEDU
+ProteinEDU
 
 An interactive protein-folding educational game that teaches the user the basics of primary structure amino acid interactions.
 

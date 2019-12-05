@@ -1,8 +1,9 @@
 #Project: ProteinEDU
 #Author: Rohan Patel
 
+#A comprehensive list of every external resource used in this project can be found at tinyurl.com/tp3citations
 
-#imports
+#import statements
 from multi_key_dict import multi_key_dict
 import module_manager
 import copy
@@ -361,6 +362,7 @@ class FASTA(object):
 #autosolver using backtracking:
 
 # from http://www.cs.cmu.edu/~112/notes/notes-recursion-part2.html#genericBacktrackingSolver
+
 ##############################################
 # Generic backtracking-based puzzle solver
 #
@@ -505,7 +507,7 @@ class ProteinSolver(BacktrackingPuzzleSolver):
                     and newX-newAminoAcid.r>0 \
                     and newY-newAminoAcid.r>self.game.loadBarHeight \
                     and newX-newAminoAcid.r<self.game.gameScreenWidth \
-                    and newY+newAminoAcid.r<self.game.gameScreenHeight/2):
+                    and newY+newAminoAcid.r<self.game.screenSize2):
                     legalMoves.append((dx,dy))
        
         return legalMoves
@@ -538,6 +540,7 @@ class Game(object):
         self.delay = delay
         self.done = False
         self.solutionDisplay = False
+        self.aminoAcidInfo = ""
         self.advice = "Click and drag the amino acids to move them."
         self.issue = ""
         os.environ['SDL_VIDEO_WINDOW_POS'] = "15,40"
@@ -561,7 +564,7 @@ class Game(object):
         self.white = (255,255,255)
         self.red = (255,0,0)
         self.blue = (0,0,255)
-        self.yellow = (255,255,0)
+        self.yellow = (220,220,0)
         self.purple = (255,0,255)
         self.gray = (128,128,128)
         self.darkRed = (128,0,0)
@@ -571,11 +574,14 @@ class Game(object):
         #initialize heights/widths based on window size
 
         self.titleText = self.titlefont.render("ProteinEDU",True,self.purple)
+        self.descriptionText = self.gamefont.render("An interactive protein-folding educational game that teaches the user the basics of primary structure amino acid interactions.",True,self.blue)
+        self.continueText = self.smallfont.render("Click anywhere to continue.",True,self.darkRed)
+
 
         #help screen
         self.helpTitleText = self.titlefont.render("HELP SCREEN",True,self.blue)
         self.objectiveText = self.gamefont.render("Objective: Solve the puzzle by moving each amino acid into a satisfactory conformation.",True,self.black)
-        self.explanationText = self.gamefont.render("Each amino acid on the screen must be EITHER in a satisfactory location OR interact with another amino acid.",True,self.black)
+        self.explanationText = self.gamefont.render("To be satisfied each amino acid on the screen must be EITHER in a satisfactory location OR interact with another amino acid.",True,self.black)
         self.categoriesText = self.gamefont.render("The 20 basic amino acids have been separated into five types.",True,self.black)
         self.nonpolarGreen = self.gamefont.render("GREEN- nonpolar amino acids",True,self.green)
         self.nonpolarYellow = self.gamefont.render("YELLOW- nonpolar amino acids, contains a sulfide",True,self.yellow)
@@ -584,22 +590,18 @@ class Game(object):
         self.polarPurple = self.gamefont.render("PURPLE - polar amino acids",True,self.purple)
 
         self.locationRules = self.gamefont.render("To satisfy via location, follow the below rules.", True, self.gray)
-        self.nonpolarRules = self.gamefont.render("Nonpolars prefer to be near the center of the protein due to hydrophobic interaction with water.",True,self.black)
-        self.polarLocationRules = self.gamefont.render("Polars prefer to be away from the center of the protein due to hydrophilic interaction with water",True,self.black)
-        self.chargedLocationRules = self.gamefont.render("Positive/negatively charged amino acids are also hydrophilic, but additionally must not be next to an like charge.",True,self.black)
+        self.nonpolarRules = self.gamefont.render("-Nonpolars prefer to be near the center of the protein due to hydrophobic interaction with water.",True,self.black)
+        self.polarLocationRules = self.gamefont.render("-Polars prefer to be away from the center of the protein due to hydrophilic interaction with water",True,self.black)
+        self.chargedLocationRules = self.gamefont.render("-Positive/negatively charged amino acids are also hydrophilic, but additionally must not be next to an like charge.",True,self.black)
 
         self.interactionRules = self.gamefont.render("To satisfy via interaction (satisfies both amino acids), follow the below rules.", True, self.gray)
-        self.disulfideBridgeRules = self.gamefont.render("Sulfide containing amino acids can form disulfide bridges.", True, self.black)
-        self.electrostaticRules = self.gamefont.render("Charged amino acids can experience electrostatic attraction with an opposite charge.", True, self.black)
-        self.hbondingRules = self.gamefont.render("All polar and charged amino acids can hydrogen bond with each other.", True, self.black)
-        
-        self.forMoreInfoText = self.gamefont.render("For more information about amino acid biochemistry, and to see the limitations that ProteinEDU takes, consult:", True,self.darkRed)
-        helpString = """
-       
-    
-        The amino acids that have not yet reached their optimal conformation are listed in the tab, along with feedback. 
-        Load an example file, then click and drag each amino acid to move it. Keep in mind that the peptide bonds are of a fixed length."""
-        
+        self.disulfideBridgeRules = self.gamefont.render("-Sulfide containing amino acids can form disulfide bridges.", True, self.black)
+        self.electrostaticRules = self.gamefont.render("-Charged amino acids can experience electrostatic attraction with an opposite charge.", True, self.black)
+        self.hbondingRules = self.gamefont.render("-All polar and charged amino acids can hydrogen bond with each other.", True, self.black)
+        self.goalText = self.gamefont.render("In other words, each amino acid must meet one of the above six criteria to be considered biochemically satisified.", True, self.red)
+        self.goal2Text = self.gamefont.render("Load an example FASTA file, then click and drag each amino acid to move it. Keep in mind that the peptide bonds are of a fixed length.", True, self.black)
+        self.forMoreInfoText = self.smallfont.render("This project offers a very simplified view of proteins. For more information about amino acid biochemistry, visit: https://tinyurl.com/applicableinformation", True,self.darkRed)
+ 
 
         #game runtime screen
         #initialize heights/widths based on window size
@@ -655,6 +657,8 @@ class Game(object):
 
         self.resetSelection()
         self.infoImageBox = pygame.Rect(self.infoImageX,self.infoImageY,self.infoImageWidth,self.infoImageHeight)
+
+        self.aminoAcidInfoText = self.gamefont.render(self.aminoAcidInfo,True,self.black)
         
         self.gameOverText = self.titlefont.render("GAMEOVER",True,self.black)
         self.clickAnywhereText = self.gamefont.render("Click anywhere to end the game.",True,self.black)
@@ -664,31 +668,31 @@ class Game(object):
 
         self.solveText = self.gamefont.render("AUTOSOLVE",True,self.black)
 
-        
-
         self.issueText = self.gamefont.render(self.issue,True,self.black)
 
 
 
     def loadFASTA(self): 
         dataDir="assets/data"
-        self.root.focus_force()
-        fileName = filedialog.askopenfilename(initialdir=dataDir,parent=self.root) #prompts user to specify file
+        
+        fileName = filedialog.askopenfilename(initialdir=dataDir) #prompts user to specify file
 
         if ("fasta" in fileName.lower()):
             self.gameFASTA = FASTA(fileName)
             sequence = self.gameFASTA.getSequence()
-            start = random.randint(0,len(sequence)-6) #takes a fragment
+            start = random.randint(0,len(sequence)-6) #takes a random fragment
             self.gameSequence = sequence[start:start+5]
             while("stop" in self.gameSequence):
+                start = random.randint(0,len(sequence)-6) 
                 self.gameSequence = sequence[start:start+5]
             self.fileLoaded=True
             self.unsolvedSequence = copy.copy(self.gameSequence)
-
+            return True
 
       
         else:
-            self.issue = "WRONG FILE TYPE"
+            self.issue = "Wrong file type. Please load a FASTA file."
+            return False
         
 
     def FASTAtest(self,fileName):
@@ -704,7 +708,7 @@ class Game(object):
         dx = self.gameScreenWidth/(len(self.gameSequence)+1)
         currentX = dx
         self.bondLength = dx * 2.5
-        currentY = self.gameScreenHeight/2
+        currentY = self.gameScreenHeight/3
         for aminoAcid in self.gameSequence:
             aminoAcid.x = currentX
             aminoAcid.y = currentY
@@ -896,6 +900,26 @@ class Game(object):
         path = "assets/images/" +aminoAcid.name.lower()+".png"
         self.infoImage = pygame.image.load(path)
         self.infoImage = pygame.transform.scale(self.infoImage,[200,200])
+        self.aminoAcidInfo = ""
+        if (aminoAcid.sidechain.polar):
+            self.aminoAcidInfo+="polar, "
+        elif (aminoAcid.sidechain.charge==1):
+            self.aminoAcidInfo+="positively charged, "
+        elif (aminoAcid.sidechain.charge==1):
+            self.aminoAcidInfo+="negatively charged, "
+        else:
+            self.aminoAcidInfo+="nonpolar, "
+        if (aminoAcid.sidechain.hbond):
+            self.aminoAcidInfo+="hydrogen bonding, "
+        else:
+            self.aminoAcidInfo+="no hydrogen bonding, "
+        if (aminoAcid.sidechain.sulfide):
+            self.aminoAcidInfo+="contains sulfide. "
+        else:
+            self.aminoAcidInfo+="no sulfide. "
+
+        self.aminoAcidInfoText = self.gamefont.render(self.aminoAcidInfo,True,self.black)
+        
 
     def resetSelection(self):
         self.infoText = self.namefont.render("No selection",True,self.black) 
@@ -935,24 +959,28 @@ def main():
         game.screen.blit(game.infoText,(sideBarWidth,game.gameScreenHeight/20))
         game.screen.blit(game.infoImage, game.infoImageBox.topleft)
 
+        game.aminoAcidInfoText = game.gamefont.render(game.aminoAcidInfo,True,game.black)
+        game.screen.blit(game.aminoAcidInfoText,(sideBarWidth, 15*game.gameScreenHeight/40))
+
         game.adviceText = game.smallfont.render(game.advice,True,game.black)
         game.screen.blit(game.adviceText,(sideBarWidth, game.gameScreenHeight/2))
 
-        game.screen.blit(game.issueText,(sideBarWidth, 9*game.gameScreenHeight/15))
+        game.issueText = game.gamefont.render(game.issue,True,game.black)
+        game.screen.blit(game.issueText,(sideBarWidth, 8*game.gameScreenHeight/15))
 
         game.satisfiedAminoAcidsText = game.smallfont.render("Solved: "+ str(game.solvedSequence),True,game.black)
         game.unsatisfiedAminoAcidsText = game.smallfont.render("Unsolved: "+ str(game.unsolvedSequence),True,game.black)
 
         game.screen.blit(game.satisfiedAminoAcidsText,(sideBarWidth, 18*game.gameScreenHeight/40))
         game.screen.blit(game.unsatisfiedAminoAcidsText,(sideBarWidth, 19*game.gameScreenHeight/40))
-        game.drawSequence()
+        
 
         if (game.solutionDisplay):
 
-      
-            game.screen.blit(game.gameOverText,(game.width/3, game.height/2))
-            game.screen.blit(game.clickAnywhereText,(game.width/3, 4*game.height/7))
-            
+            game.screen.blit(game.gameOverText,(game.width/3, 4*game.height/14))
+            game.screen.blit(game.clickAnywhereText,(game.width/3, 5*game.height/14))
+        
+        game.drawSequence()
 
         for event in pygame.event.get():
             if (event.type == pygame.QUIT):
@@ -965,9 +993,9 @@ def main():
                     mouseX,mouseY = mousePos
                     left,right,middle=pygame.mouse.get_pressed()
                     if (game.loadButton.collidepoint(mousePos) and left):
-                        game.loadFASTA()
-                        game.initializeGameScreen()
-                        game.fileLoaded = True
+                        if (game.loadFASTA()):
+                            game.initializeGameScreen()
+                            game.fileLoaded = True
                     elif (game.clearButton.collidepoint(mousePos) and left):
                         game.gameSequence = None
                         game.gameFASTA = None
@@ -995,8 +1023,7 @@ def main():
 
                                 aminoAcid.particle.clicked=True
                                 game.displayInformation(aminoAcid)
-                            else:
-                                pass
+                  
                                 
                     else:
                         game.resetSelection()
@@ -1019,8 +1046,7 @@ def main():
                                
                                 game.undoMove(aminoAcid)
                             aminoAcid.particle.clicked=False
-                            
-                
+                                            
             elif (event.type == pygame.MOUSEMOTION):
                 if (game.fileLoaded):
                     mousePos = event.pos
@@ -1035,7 +1061,6 @@ def main():
                                 otherX = otherElement.x
                                 otherY = otherElement.y
                                 
-                        
                             elif (i!=len(game.gameSequence)-1):
                                 otherElement = game.gameSequence[i+1]
                                 otherX = otherElement.x
@@ -1050,12 +1075,11 @@ def main():
                                 aminoAcid.particle.clicked=False
                                 brokenLink=aminoAcid
                             else:
-                                
                                 aminoAcid.particle.x = mouseX
                                 aminoAcid.particle.y = mouseY
                     if (brokenLink!=None):
-                        game.advice = "Too far"
-                        game.undoMove(brokenLink,iterations=7)
+                        game.advice = "Bond length stretched too far."
+                        game.undoMove(brokenLink,iterations=5)
                         brokenLink=None
                        
         pygame.display.update()
@@ -1068,7 +1092,9 @@ def intro(game):
     while (not introDone):
 
         game.screen.fill((255,255,255))
-        game.screen.blit(game.titleText,(game.screenSize/3,game.screenSize/6))
+        game.screen.blit(game.titleText,(game.screenSize/3,game.screenSize/12))
+        game.screen.blit(game.descriptionText,(game.screenSize/12,game.screenSize/6))
+        game.screen.blit(game.continueText,(game.screenSize/3,game.screenSize/120))
         for event in pygame.event.get():
             if (event.type == pygame.MOUSEBUTTONDOWN):
                 introDone=True
@@ -1086,6 +1112,7 @@ def help(game):
         game.screen.fill((255,255,255))
         textX1 = game.screenSize/15
         textX2 = game.screenSize/5
+        game.screen.blit(game.continueText,(game.screenSize/3,game.screenSize/120))
         game.screen.blit(game.helpTitleText,(game.screenSize/3,game.screenSize/40))
         game.screen.blit(game.objectiveText,(textX1,3*game.screenSize/40))
         game.screen.blit(game.explanationText,(textX1,4*game.screenSize/40))
@@ -1103,7 +1130,9 @@ def help(game):
         game.screen.blit(game.disulfideBridgeRules,(textX2,16*game.screenSize/40))
         game.screen.blit(game.electrostaticRules,(textX2,17*game.screenSize/40))
         game.screen.blit(game.hbondingRules,(textX2,18*game.screenSize/40))
-        game.screen.blit(game.forMoreInfoText,(textX1,21*game.screenSize/40))
+        game.screen.blit(game.goalText,(textX1,19*game.screenSize/40))
+        game.screen.blit(game.goal2Text,(textX1,20*game.screenSize/40))
+        game.screen.blit(game.forMoreInfoText,(textX1,22*game.screenSize/40))
       
         for event in pygame.event.get():
             if (event.type == pygame.MOUSEBUTTONDOWN):

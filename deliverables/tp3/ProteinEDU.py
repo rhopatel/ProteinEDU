@@ -1,6 +1,7 @@
 #Project: ProteinEDU
 #Author: Rohan Patel
-
+#this file contains the biological inheritance hierarchy, the FASTA translator, the autosolver algorithm, and the game itself
+#translates DNA to amino acids, creates interactable amino acid objects, and includes a puzzle autosolve feature
 #A comprehensive list of every external resource used in this project can be found at tinyurl.com/tp3citations
 
 #import statements
@@ -17,10 +18,10 @@ import math
 import tkinter
 
 
-#biological inheritance hierarchy:
+#biological inheritance hierarchy: conserves code
 
-#AminoAcid superclass (will contain applicable method)
-class AminoAcid(object):
+#AminoAcid superclass
+class AminoAcid(object): 
     def __init__(self, sidechain,color,abbr):
         self.alphaCarbon = AlphaCarbon()
         self.amine = Amine()
@@ -39,14 +40,14 @@ class AminoAcid(object):
     def __repr__(self):
         return self.name
     
-    def addToChain(self):
+    def addToChain(self): #performs peptide bonding by removing amine and carboxyl groups
         self.amine = None
         self.carboxyl = None
     
     def draw(self,game):
         self.particle.draw_particle(game)
         
-class Particle(object):
+class Particle(object): #interface between the amino acid object and the pygame user interaction
     def __init__(self,name,abbr,color, x, y ,r):
         self.x = x
         self.y = y
@@ -56,7 +57,7 @@ class Particle(object):
         self.name = name
         self.abbr = abbr
    
-    def draw_particle(self,game):
+    def draw_particle(self,game): #draws the amino acid
         screen = game.screen
         self.boundingBox=pygame.draw.circle(screen,self.color,(int(self.x),int(self.y)),self.r)
         self.textRect = pygame.Rect(self.x,self.y,
@@ -66,7 +67,7 @@ class Particle(object):
         game.screen.blit(self.nameText,self.textRect)
 
 
-#FunctionalGroup superclass (will contain applicable method)
+#FunctionalGroup superclass
 class FunctionalGroup(object): 
     def __init__(self,charge,sulfide,hbond,polar):
         self.charge = charge
@@ -74,7 +75,7 @@ class FunctionalGroup(object):
         self.hbond = hbond
         self.polar = polar
 
-#three common functional groups
+#three common functional groups inherit from Functional Group superclass
 class AlphaCarbon(FunctionalGroup):
     def __init__(self):
         super().__init__(0,False,False,False)
@@ -85,7 +86,7 @@ class Carboxyl(FunctionalGroup):
     def __init__(self):
         super().__init__(-1,False,False,True)
 
-#all the unique amino acids
+#all the unique amino acids inherit from AminoAcid superclass
 class Alanine(AminoAcid):
     def __init__(self):
         sidechain = AlanineSideChain()
@@ -187,8 +188,8 @@ class Valine(AminoAcid):
         abbr = "Val" 
         super().__init__(sidechain,sidechain.color,abbr)
 
-#unique sidechain functional groups
-class AlanineSideChain(FunctionalGroup):
+#unique sidechain functional groups inherit from FunctionalGroup superclass
+class AlanineSideChain(FunctionalGroup): 
     def __init__(self):
         super().__init__(0,False,False,False)
         self.color = "green"
@@ -269,7 +270,7 @@ class ValineSideChain(FunctionalGroup):
         super().__init__(0,False,False,False)
         self.color = "green"
 
-#fasta file to AminoAcid sequence translator
+#FASTA file (dna) to AminoAcid sequence translator
 class FASTA(object):
     def __init__(self, path):
         self.path = path
@@ -284,18 +285,18 @@ class FASTA(object):
     def getTitle(self):
         return self.title
 
-    def FASTAtranslate(self,path):
+    def FASTAtranslate(self,path): #performs all steps of the central dogma, produces finished bonded sequence
         dnaSequence = self.readToString(path)
         rnaSequence = self.transcribe(dnaSequence)
         self.aminoacidsequence = self.translate(rnaSequence)
         self.bond()
         
     #from http://www.cs.cmu.edu/~112/notes/notes-strings.html#basicFileIO
-    def readFile(self, path):
+    def readFile(self, path): 
         with open(path, "rt") as f:
             return f.read()
 
-    def readToString(self,path):
+    def readToString(self,path):  #reads a FASTA file by lines
         raw = self.readFile(path)
         dnaSequence = ""
         for line in raw.splitlines():
@@ -305,12 +306,12 @@ class FASTA(object):
                 dnaSequence += (line.upper())
         return dnaSequence
         
-    def transcribe(self,dnaSequence):
+    def transcribe(self,dnaSequence): #performs biological transcription
         rnaSequence = ""
         rnaSequence = dnaSequence.replace("T", "U")
         return rnaSequence
 
-    def translate(self,rnaSequence):
+    def translate(self,rnaSequence): #performs biological translation
         aminoacidsequence = []
         end = len(rnaSequence)
         i = 0
@@ -325,13 +326,13 @@ class FASTA(object):
             i+=3
         return aminoacidsequence
 
-    def bond(self):
+    def bond(self): #bonds all amino acids except for the terminus
         for i in range(1, len(self.aminoacidsequence)-2):
             currentAminoAcid = self.aminoacidsequence[i]
             if (isinstance(currentAminoAcid,AminoAcid)):
                 currentAminoAcid.addToChain()
 
-    def makeCodonDict(self):
+    def makeCodonDict(self):  #since multiple codons code for the same amino acid, a multi key dictionary was used
         codonDict = multi_key_dict() 
         codonDict["UUU","UUC"] = Phenylalanine()
         codonDict["UUA","UUG","CUU","CUC","CUA","CUG"] = Leucine()
@@ -452,7 +453,7 @@ class State(object):
     def __repr__(self): return str(self.__dict__)
 
 
-class ProteinState(State):
+class ProteinState(State): #contains the placed and unplaced amino acids
     def __init__(self, placed, unplaced):
         self.placed = placed
         self.unplaced = unplaced
@@ -462,11 +463,11 @@ class ProteinState(State):
  
 
 class ProteinSolver(BacktrackingPuzzleSolver):
-    def __init__(self, game):
+    def __init__(self, game): 
         self.game = game
         self.L = self.game.getGameSequence()
       
-        self.L[0].particle.x = game.gameScreenWidth//2
+        self.L[0].particle.x = game.gameScreenWidth//2 
         self.L[0].particle.y = game.gameScreenHeight//2
         self.L[0].satisfied = True
 
@@ -529,28 +530,28 @@ class ProteinSolver(BacktrackingPuzzleSolver):
         return newState
 
 
-class Game(object):
+class Game(object): #main Game object for interaction with pygame
     def __init__(self,delay):
+        #initializes game details
         self.gameFASTA = None
         self.gameSequence = None
         self.solvedSequence = []
         self.unsolvedSequence = []
         self.fileLoaded = False
-
         self.delay = delay
         self.done = False
         self.solutionDisplay = False
         self.aminoAcidInfo = ""
         self.advice = "Click and drag the amino acids to move them."
         self.issue = ""
-        os.environ['SDL_VIDEO_WINDOW_POS'] = "15,40"
 
+        #sets up pygame environment
+        os.environ['SDL_VIDEO_WINDOW_POS'] = "15,40"
         pygame.init()
         self.root = tkinter.Tk()
         self.width = self.root.winfo_screenwidth()
         self.height = self.root.winfo_screenheight()
         self.screen = pygame.display.set_mode((int(self.width),int(self.height)),pygame.RESIZABLE)
-        
         self.screen.fill((255,255,255))
         pygame.display.set_caption("ProteinEDU")
 
@@ -571,8 +572,6 @@ class Game(object):
         self.screenSize,self.screenSize2=pygame.display.get_surface().get_size()
 
         #splash screen
-        #initialize heights/widths based on window size
-
         self.titleText = self.titlefont.render("ProteinEDU",True,self.purple)
         self.descriptionText = self.gamefont.render("An interactive protein-folding educational game that teaches the user the basics of primary structure amino acid interactions.",True,self.blue)
         self.continueText = self.smallfont.render("Click anywhere to continue.",True,self.darkRed)
@@ -672,7 +671,7 @@ class Game(object):
 
 
 
-    def loadFASTA(self): 
+    def loadFASTA(self): #prompts the user to select a FASTA file, and loads it using the FASTA class
         dataDir="assets/data"
         
         fileName = filedialog.askopenfilename(initialdir=dataDir) #prompts user to specify file
@@ -695,7 +694,7 @@ class Game(object):
             return False
         
 
-    def FASTAtest(self,fileName):
+    def FASTAtest(self,fileName): #test of FASTA translation
         testTranslator = FASTA(fileName)
         final = testTranslator.getSequence()
         module_manager.review()
@@ -704,7 +703,7 @@ class Game(object):
     def getGameSequence(self):
         return self.gameSequence
     
-    def initializeGameScreen(self):
+    def initializeGameScreen(self): #initializes amino acids on the game screen
         dx = self.gameScreenWidth/(len(self.gameSequence)+1)
         currentX = dx
         self.bondLength = dx * 2.5
@@ -719,13 +718,13 @@ class Game(object):
     
 
     
-    def checkLegal(self,aminoAcid,otherAminoAcids=None):
+    def checkLegal(self,aminoAcid,otherAminoAcids=None): #checks if amino acid is biochemically satisfied relative to others
         if (otherAminoAcids==None):
             otherAminoAcids = copy.copy(self.getGameSequence())
             otherAminoAcids.remove(aminoAcid)
+
         totalX = 0
         totalY = 0
-        
         for otherAminoAcid in otherAminoAcids:
             totalX+=otherAminoAcid.particle.x
             totalY+=otherAminoAcid.particle.y
@@ -752,12 +751,12 @@ class Game(object):
         if(sidechain.charge==1):
             for other in otherAminoAcids:
                 distance = abs(other.particle.x-aminoAcid.particle.x)
-                if (other.sidechain.charge==-1):
+                if (other.sidechain.charge==1):
                     if (distance < threshold*1.5):
                         self.advice = "positive charged amino acid cannot be near other positive charges"
                   
          
-                elif (other.sidechain.charge==1):
+                elif (other.sidechain.charge==-1):
                     if (distance < threshold*1.5):
                   
                         return self.satisfiedInteraction(aminoAcid, other)
@@ -807,7 +806,7 @@ class Game(object):
         return False
 
     
-    def satisfiedInteraction(self,aminoAcid, other):
+    def satisfiedInteraction(self,aminoAcid, other): #if satisfied via interaction
 
         aminoAcid.associates.add(other)
         other.associates.add(aminoAcid)
@@ -823,7 +822,7 @@ class Game(object):
 
         return True
 
-    def satisfiedLocation(self,aminoAcid):
+    def satisfiedLocation(self,aminoAcid): #if satisfied via location
         aminoAcid.satisfied = True
         if (aminoAcid in self.unsolvedSequence):
             self.unsolvedSequence.remove(aminoAcid)
@@ -832,13 +831,13 @@ class Game(object):
         return True
 
 
-    def checkForWin(self):
+    def checkForWin(self): #check if all amino acids are satisfied
         for aminoAcid in self.gameSequence:
             if not aminoAcid.satisfied:
                 return False
         return True
 
-    def undoMove(self,aminoAcid,iterations=10):
+    def undoMove(self,aminoAcid,iterations=10): #reverts amino acid to previous position if not satisfied
         
         dx = (aminoAcid.particle.x - aminoAcid.x) / 10
         dy = (aminoAcid.particle.y - aminoAcid.y) / 10
@@ -866,11 +865,11 @@ class Game(object):
 
             pygame.time.delay(15)
     
-    def drawSequence(self):
+    def drawSequence(self): #draws the amino acid sequence on the game screen
         if (self.fileLoaded):
             prevX = None
-            prevY = None
-            for aminoAcid in self.getGameSequence():
+            prevY = None 
+            for aminoAcid in self.getGameSequence(): #draw each amino acid
                 if (prevX!=None):
                     pygame.draw.line(self.screen,self.black,(prevX,prevY),
                                             (aminoAcid.particle.x,
@@ -879,7 +878,7 @@ class Game(object):
                 prevY = aminoAcid.particle.y
                 aminoAcid.draw(self)
          
-                for associate in aminoAcid.associates: #draw interactions
+                for associate in aminoAcid.associates: #draw interactions as lines
                     if (aminoAcid.sidechain.sulfide and associate.sidechain.sulfide):
                         pygame.draw.line(self.screen,self.yellow,(associate.particle.x,associate.particle.y),
                                                 (aminoAcid.particle.x,
@@ -893,9 +892,9 @@ class Game(object):
                                                 (aminoAcid.particle.x,
                                                 aminoAcid.particle.y),10)                            
 
-            pygame.display.update()
+            pygame.display.update() 
     
-    def displayInformation(self,aminoAcid):
+    def displayInformation(self,aminoAcid): #updates/displays selected amino acid information
         self.infoText = self.namefont.render(aminoAcid.name,True,self.black)  
         path = "assets/images/" +aminoAcid.name.lower()+".png"
         self.infoImage = pygame.image.load(path)
@@ -921,7 +920,7 @@ class Game(object):
         self.aminoAcidInfoText = self.gamefont.render(self.aminoAcidInfo,True,self.black)
         
 
-    def resetSelection(self):
+    def resetSelection(self): 
         self.infoText = self.namefont.render("No selection",True,self.black) 
         self.infoImage= pygame.image.load("assets/images/empty.png")
 
@@ -931,10 +930,11 @@ class Game(object):
         advice = "Game Over."
 
         
-def main():
+def main(): #main game loop
     game = Game(10)
     intro(game)
     while not game.done:
+        #draw main game elements
         pygame.time.delay(game.delay)
         game.screen.fill((255,255,255))
         pygame.draw.rect(game.screen,game.black,game.gameScreen, 10)
@@ -975,7 +975,7 @@ def main():
         game.screen.blit(game.unsatisfiedAminoAcidsText,(sideBarWidth, 19*game.gameScreenHeight/40))
         
 
-        if (game.solutionDisplay):
+        if (game.solutionDisplay): #if puzzle has been solved and solution is being viewed
 
             game.screen.blit(game.gameOverText,(game.width/3, 4*game.height/14))
             game.screen.blit(game.clickAnywhereText,(game.width/3, 5*game.height/14))
@@ -992,38 +992,38 @@ def main():
                     mousePos = pygame.mouse.get_pos()
                     mouseX,mouseY = mousePos
                     left,right,middle=pygame.mouse.get_pressed()
-                    if (game.loadButton.collidepoint(mousePos) and left):
+                    if (game.loadButton.collidepoint(mousePos) and left): #load button clicked
                         if (game.loadFASTA()):
                             game.initializeGameScreen()
                             game.fileLoaded = True
-                    elif (game.clearButton.collidepoint(mousePos) and left):
+                    elif (game.clearButton.collidepoint(mousePos) and left): #clear button clicked
                         game.gameSequence = None
                         game.gameFASTA = None
                         game.fileLoaded = False
         
-                    elif (game.helpButton.collidepoint(mousePos) and left):
+                    elif (game.helpButton.collidepoint(mousePos) and left): #help button clicked
                         help(game)
 
-                    elif (game.solveButton.collidepoint(mousePos) and left):
+                    elif (game.solveButton.collidepoint(mousePos) and left): #solve button clicked
                         
                         if (game.fileLoaded):
                             game.advice = "solving...."
                             solve(game)
-                        
+
                     elif(game.screen.get_at(mousePos)!=game.white \
                         and mouseX<game.gameScreenWidth \
                         and mouseY>game.loadBarHeight \
                         and mouseY<game.gameScreenHeight):
-            
+                        #if clicked somewhere on the screen    
                         for aminoAcid in game.getGameSequence():
                             sqx = (mouseX - aminoAcid.particle.x)**2
                             sqy = (mouseY - aminoAcid.particle.y)**2
 
-                            if (math.sqrt(sqx + sqy) < aminoAcid.r):
+                            if (math.sqrt(sqx + sqy) < aminoAcid.r): 
+                                #determines if click is within a circle
 
                                 aminoAcid.particle.clicked=True
                                 game.displayInformation(aminoAcid)
-                  
                                 
                     else:
                         game.resetSelection()
@@ -1087,10 +1087,10 @@ def main():
     
     pygame.quit()
 
-def intro(game):
+def intro(game): #intro (splash screen)
     introDone = False
     while (not introDone):
-
+        #load intro screen static elements
         game.screen.fill((255,255,255))
         game.screen.blit(game.titleText,(game.screenSize/3,game.screenSize/12))
         game.screen.blit(game.descriptionText,(game.screenSize/12,game.screenSize/6))
@@ -1105,10 +1105,10 @@ def intro(game):
                 
         pygame.display.update() 
 
-def help(game):
+def help(game): #help screen
     helpDone = False
     while (not helpDone):
-
+        #load help screen static elements
         game.screen.fill((255,255,255))
         textX1 = game.screenSize/15
         textX2 = game.screenSize/5
@@ -1143,11 +1143,10 @@ def help(game):
                 
         pygame.display.update() 
 
-def solve(game):
+def solve(game): #wrapper method for the autosolver
     solver = ProteinSolver(game)
     if(solver.solve()==None):
         game.issue="Autosolver could not find a solution."
-    game.gameSequence[len(game.gameSequence)-1].x += 1
     game.checkLegal(game.gameSequence[len(game.gameSequence)-1])
     game.unsolvedSequence = []
     game.solvedSequence = game.gameSequence
